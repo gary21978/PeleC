@@ -13,9 +13,6 @@
 #include <type_traits>
 #include <utility>
 
-#ifdef AMREX_USE_SYCL
-#  include <sycl/sycl.hpp>
-#endif
 
 namespace amrex { inline namespace disabled {
     // If it is inside namespace amrex, or amrex namespace is imported with using namespace amrex or
@@ -44,21 +41,8 @@ using std::copysign;
 using std::floor;
 using std::round;
 
-// However, since Intel's SYCL compiler is very aggressive with fast floating
-// point optimisations, the following must be kept, as using the std functions
-// always evaluates to false (even at -O1).
-
-#ifdef AMREX_USE_SYCL
-
-using sycl::isfinite;
-using sycl::isinf;
-
-#else
-
 using std::isfinite;
 using std::isinf;
-
-#endif
 
 template <typename T>
 constexpr std::enable_if_t<std::is_floating_point_v<T>,T> pi ()
@@ -70,48 +54,32 @@ constexpr std::enable_if_t<std::is_floating_point_v<T>,T> pi ()
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 double cospi (double x)
 {
-#if defined(AMREX_USE_SYCL)
-    return sycl::cospi(x);
-#else
     AMREX_IF_ON_DEVICE(( return ::cospi(x); ))
     AMREX_IF_ON_HOST(( return std::cos(pi<double>()*x); ))
-#endif
 }
 
 //! Return cos(x*pi) given x
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 float cospi (float x)
 {
-#if defined(AMREX_USE_SYCL)
-    return sycl::cospi(x);
-#else
     AMREX_IF_ON_DEVICE(( return ::cospif(x); ))
     AMREX_IF_ON_HOST(( return std::cos(pi<float>()*x); ))
-#endif
 }
 
 //! Return sin(x*pi) given x
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 double sinpi (double x)
 {
-#if defined(AMREX_USE_SYCL)
-    return sycl::sinpi(x);
-#else
     AMREX_IF_ON_DEVICE(( return ::sinpi(x); ))
     AMREX_IF_ON_HOST(( return std::sin(pi<double>()*x); ))
-#endif
 }
 
 //! Return sin(x*pi) given x
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 float sinpi (float x)
 {
-#if defined(AMREX_USE_SYCL)
-    return sycl::sinpi(x);
-#else
     AMREX_IF_ON_DEVICE(( return ::sinpif(x); ))
     AMREX_IF_ON_HOST(( return std::sin(pi<float>()*x); ))
-#endif
 }
 
 namespace detail {
@@ -134,32 +102,13 @@ namespace detail {
     }
 }
 
-#ifdef AMREX_USE_SIMD
-//! Return sine and cosine of given number
-template<typename T_Real,
-         std::enable_if_t<amrex::simd::stdx::is_simd_v<T_Real>,int> = 0>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-std::pair<T_Real,T_Real> sincos (T_Real x)
-{
-    using namespace amrex::simd::stdx;
-    std::pair<T_Real,T_Real> r;
-    r.first = sin(x);
-    r.second = cos(x);
-    return r;
-}
-#endif
-
 //! Return sine and cosine of given number
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 std::pair<double,double> sincos (double x)
 {
     std::pair<double,double> r;
-#if defined(AMREX_USE_SYCL)
-    r.first = sycl::sincos(x, sycl::private_ptr<double>(&r.second));
-#else
     AMREX_IF_ON_DEVICE(( ::sincos(x, &r.first, &r.second); ))
     AMREX_IF_ON_HOST(( detail::sincos(x, &r.first, &r.second); ))
-#endif
     return r;
 }
 
@@ -168,42 +117,18 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 std::pair<float,float> sincos (float x)
 {
     std::pair<float,float> r;
-#if defined(AMREX_USE_SYCL)
-    r.first = sycl::sincos(x, sycl::private_ptr<float>(&r.second));
-#else
     AMREX_IF_ON_DEVICE(( ::sincosf(x, &r.first, &r.second); ))
     AMREX_IF_ON_HOST(( detail::sincosf(x, &r.first, &r.second); ))
-#endif
     return r;
 }
-
-#ifdef AMREX_USE_SIMD
-//! Return sin(pi*x) and cos(pi*x) given x
-template<typename T_Real,
-         std::enable_if_t<amrex::simd::stdx::is_simd_v<T_Real>,int> = 0>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-std::pair<T_Real,T_Real> sincospi (T_Real x)
-{
-    using namespace amrex::simd::stdx;
-    T_Real const px = pi<typename T_Real::value_type>() * x;
-    std::pair<T_Real,T_Real> r;
-    r.first = sin(px);
-    r.second = cos(px);
-    return r;
-}
-#endif
 
 //! Return sin(pi*x) and cos(pi*x) given x
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 std::pair<double,double> sincospi (double x)
 {
     std::pair<double,double> r;
-#if defined(AMREX_USE_SYCL)
-    r = sincos(pi<double>()*x);
-#else
     AMREX_IF_ON_DEVICE(( ::sincospi(x, &r.first, &r.second); ))
     AMREX_IF_ON_HOST(( r = sincos(pi<double>()*x); ))
-#endif
     return r;
 }
 
@@ -212,12 +137,8 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 std::pair<float,float> sincospi (float x)
 {
     std::pair<float,float> r;
-#if defined(AMREX_USE_SYCL)
-    r = sincos(pi<float>()*x);
-#else
     AMREX_IF_ON_DEVICE(( ::sincospif(x, &r.first, &r.second); ))
     AMREX_IF_ON_HOST(( r = sincos(pi<float>()*x); ))
-#endif
     return r;
 }
 
@@ -247,15 +168,11 @@ constexpr T powi (T x) noexcept
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 std::uint64_t umulhi (std::uint64_t a, std::uint64_t b)
 {
-#if defined(AMREX_USE_SYCL)
-    return sycl::mul_hi(a,b);
-#else
     AMREX_IF_ON_DEVICE(( return __umul64hi(a, b); ))
     AMREX_IF_ON_HOST((
         auto tmp = amrex::UInt128_t(a) * amrex::UInt128_t(b);
         return std::uint64_t(tmp >> 64);
     ))
-#endif
 }
 #endif
 
@@ -330,11 +247,7 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 double rsqrt (double x)
 {
     double r;
-#if defined(AMREX_USE_SYCL)
-    AMREX_IF_ON_DEVICE(( r = sycl::rsqrt(x); ))
-#else
     AMREX_IF_ON_DEVICE(( r = ::rsqrt(x); ))
-#endif
     AMREX_IF_ON_HOST(( r = 1. / std::sqrt(x); ))
     return r;
 }
@@ -344,40 +257,8 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 float rsqrt (float x)
 {
     float r;
-#if defined(AMREX_USE_SYCL)
-    AMREX_IF_ON_DEVICE(( r = sycl::rsqrt(x); ))
-#else
     AMREX_IF_ON_DEVICE(( r = ::rsqrtf(x); ))
-#endif
     AMREX_IF_ON_HOST(( r = 1.F / std::sqrt(x); ))
-    return r;
-}
-
-//! Return 10**x
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-double exp10 (double x)
-{
-    double r;
-#if defined(AMREX_USE_SYCL)
-    AMREX_IF_ON_DEVICE(( r = sycl::exp10(x); ))
-#else
-    AMREX_IF_ON_DEVICE(( r = ::exp10(x); ))
-#endif
-    AMREX_IF_ON_HOST(( r = std::pow(10.0, x); ))
-    return r;
-}
-
-//! Return 10**x
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-float exp10 (float x)
-{
-    float r;
-#if defined(AMREX_USE_SYCL)
-    AMREX_IF_ON_DEVICE(( r = sycl::exp10(x); ))
-#else
-    AMREX_IF_ON_DEVICE(( r = ::exp10f(x); ))
-#endif
-    AMREX_IF_ON_HOST(( r = std::pow(10.0F, x); ))
     return r;
 }
 

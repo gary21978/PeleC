@@ -253,9 +253,6 @@ PETScABecLap::prepareSolver ()
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion()) reduction(+:ncells_proc)
-#endif
             for (MFIter mfi(cell_id); mfi.isValid(); ++mfi)
             {
                 const Box& bx = mfi.validbox();
@@ -315,9 +312,6 @@ PETScABecLap::prepareSolver ()
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(cell_id,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
                 const Box& tbx = mfi.growntilebox();
                 const Box& vbx = mfi.validbox();
@@ -373,9 +367,6 @@ PETScABecLap::prepareSolver ()
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(cell_id,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             Box const& bx = mfi.tilebox();
@@ -645,9 +636,6 @@ PETScABecLap::loadVectors (MultiFab& soln, const MultiFab& rhs)
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(rhs_diag,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box& reg = mfi.validbox();
@@ -687,9 +675,6 @@ PETScABecLap::loadVectors (MultiFab& soln, const MultiFab& rhs)
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(rhs_diag,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box& tbx = mfi.tilebox();

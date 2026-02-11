@@ -308,9 +308,6 @@ TagBoxArray::buffer (const IntVect& nbuf)
 
     if (nbuf.max() > 0)
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
        for (MFIter mfi(*this); mfi.isValid(); ++mfi) {
            get(mfi).buffer(nbuf, n_grow);
        }
@@ -355,9 +352,6 @@ TagBoxArray::mapPeriodicRemoveDuplicates (const Geometry& geom)
 
         // We need to keep tags in periodic boundary
         const auto owner_mask = amrex::OwnerMask(tmp, Periodicity::NonPeriodic(), nGrowVect());
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
         for (MFIter mfi(tmp); mfi.isValid(); ++mfi) {
             Box const& box = mfi.fabbox();
             Array4<TagType> const& tag = tmp.array(mfi);
@@ -378,9 +372,6 @@ TagBoxArray::local_collate_cpu (Gpu::PinnedVector<IntVect>& v) const
     if (this->local_size() == 0) { return; }
 
     Vector<int> count(this->local_size());
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
     for (MFIter fai(*this); fai.isValid(); ++fai)
     {
         Array4<char const> const& arr = this->const_array(fai);
@@ -400,9 +391,6 @@ TagBoxArray::local_collate_cpu (Gpu::PinnedVector<IntVect>& v) const
 
     if (v.empty()) { return; }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
     for (MFIter fai(*this); fai.isValid(); ++fai)
     {
         int li = fai.LocalIndex();
@@ -446,27 +434,6 @@ TagBoxArray::local_collate_gpu (Gpu::PinnedVector<IntVect>& v) const
         int* ntags = dv_ntags.data() + blockoffset[li];
         const int ncells = fai.fabbox().numPts();
         const char* tags = (*this)[fai].dataPtr();
-#ifdef AMREX_USE_SYCL
-        amrex::launch<block_size>(nblocks[li], sizeof(int)*Gpu::Device::warp_size,
-                                  Gpu::Device::gpuStream(),
-        [=] AMREX_GPU_DEVICE (Gpu::Handler const& h) noexcept
-        {
-            int bid = h.item->get_group_linear_id();
-            int tid = h.item->get_local_id(0);
-            int icell = h.item->get_global_id(0);
-
-            int t = 0;
-            if (icell < ncells && tags[icell] != TagBox::CLEAR) {
-                t = 1;
-            }
-
-            t = Gpu::blockReduce<Gpu::Device::warp_size>
-                (t, Gpu::warpReduce<Gpu::Device::warp_size,int,amrex::Plus<int> >(), 0, h);
-            if (tid == 0) {
-                ntags[bid] = t;
-            }
-        });
-#else
         amrex::launch<block_size>(nblocks[li], Gpu::Device::gpuStream(),
         [=] AMREX_GPU_DEVICE () noexcept
         {
@@ -485,7 +452,6 @@ TagBoxArray::local_collate_gpu (Gpu::PinnedVector<IntVect>& v) const
                 ntags[bid] = t;
             }
         });
-#endif
     }
 
     Gpu::PinnedVector<int> hv_ntags(ntotblocks);
@@ -524,35 +490,6 @@ TagBoxArray::local_collate_gpu (Gpu::PinnedVector<IntVect>& v) const
             const auto lenx  = len.x;
             const int ncells = bx.numPts();
             const char* tags = (*this)[fai].dataPtr();
-#ifdef AMREX_USE_SYCL
-            amrex::launch<block_size>(nblocks[li], sizeof(unsigned int), Gpu::Device::gpuStream(),
-            [=] AMREX_GPU_DEVICE (Gpu::Handler const& h) noexcept
-            {
-                int bid = h.item->get_group(0);
-                int tid = h.item->get_local_id(0);
-                int icell = h.item->get_global_id(0);
-
-                unsigned int* shared_counter = (unsigned int*)h.local;
-                if (tid == 0) {
-                    *shared_counter = 0;
-                }
-                h.item->barrier(sycl::access::fence_space::local_space);
-
-                if (icell < ncells && tags[icell] != TagBox::CLEAR) {
-                    unsigned int itag = Gpu::Atomic::Add<unsigned int,
-                                                         sycl::access::address_space::local_space>
-                        (shared_counter, 1u);
-                    IntVect* p = dp_tags + dp_tags_offset[iblock_begin+bid];
-                    int k =  icell /   lenxy;
-                    int j = (icell - k*lenxy) /   lenx;
-                    int i = (icell - k*lenxy) - j*lenx;
-                    i += lo.x;
-                    j += lo.y;
-                    k += lo.z;
-                    p[itag] = IntVect(AMREX_D_DECL(i,j,k));
-                }
-            });
-#else
             amrex::launch<block_size>(nblocks[li], sizeof(unsigned int), Gpu::Device::gpuStream(),
             [=] AMREX_GPU_DEVICE () noexcept
             {
@@ -579,7 +516,6 @@ TagBoxArray::local_collate_gpu (Gpu::PinnedVector<IntVect>& v) const
                     p[itag] = IntVect(AMREX_D_DECL(i,j,k));
                 }
             });
-#endif
         }
     }
 
@@ -677,9 +613,6 @@ TagBoxArray::setVal (const BoxArray& ba, TagBox::TagVal val)
     Vector<Array4BoxTag<char> > tags;
     bool run_on_gpu = Gpu::inLaunchRegion();
     amrex::ignore_unused(run_on_gpu,tags);
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (!run_on_gpu)
-#endif
     {
         std::vector< std::pair<int,Box> > isects;
         for (MFIter mfi(*this); mfi.isValid(); ++mfi)
@@ -726,7 +659,6 @@ TagBoxArray::coarsen (const IntVect & ratio)
     }
 
 #if defined(AMREX_USE_OMP)
-#pragma omp parallel if (teamsize == 1 && Gpu::notInLaunchRegion())
 #endif
     for (MFIter mfi(*this,flags); mfi.isValid(); ++mfi)
     {
@@ -767,9 +699,6 @@ TagBoxArray::hasTags (Box const& a_bx) const
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel reduction(||:has_tags)
-#endif
         for (MFIter mfi(*this); mfi.isValid(); ++mfi)
         {
             Box const& b = a_bx & mfi.fabbox();

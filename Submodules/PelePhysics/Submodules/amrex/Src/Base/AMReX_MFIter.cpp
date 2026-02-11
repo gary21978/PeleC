@@ -21,9 +21,6 @@ int
 MFIter::currentDepth ()
 {
     int r;
-#ifdef AMREX_USE_OMP
-#pragma omp atomic read
-#endif
     r = MFIter::depth;
     return r;
 }
@@ -98,9 +95,6 @@ MFIter::MFIter (const BoxArray& ba, const DistributionMapping& dm, unsigned char
     local_tile_index_map(nullptr),
     num_local_tiles(nullptr)
 {
-#ifdef AMREX_USE_OMP
-#pragma omp single
-#endif
     {
         m_fa->addThisBD();
     }
@@ -122,9 +116,6 @@ MFIter::MFIter (const BoxArray& ba, const DistributionMapping& dm, bool do_tilin
     local_tile_index_map(nullptr),
     num_local_tiles(nullptr)
 {
-#ifdef AMREX_USE_OMP
-#pragma omp single
-#endif
     {
         m_fa->addThisBD();
     }
@@ -148,9 +139,6 @@ MFIter::MFIter (const BoxArray& ba, const DistributionMapping& dm,
     local_tile_index_map(nullptr),
     num_local_tiles(nullptr)
 {
-#ifdef AMREX_USE_OMP
-#pragma omp single
-#endif
     {
         m_fa->addThisBD();
     }
@@ -173,20 +161,9 @@ MFIter::MFIter (const BoxArray& ba, const DistributionMapping& dm, const MFItInf
     local_tile_index_map(nullptr),
     num_local_tiles(nullptr)
 {
-#ifdef AMREX_USE_OMP
-#pragma omp single
-#endif
     {
         m_fa->addThisBD();
     }
-#ifdef AMREX_USE_OMP
-    if (dynamic) {
-#pragma omp barrier
-#pragma omp single
-        nextDynamicIndex = omp_get_num_threads();
-        // yes omp single has an implicit barrier and we need it because nextDynamicIndex is static.
-    }
-#endif
 
     Initialize();
 }
@@ -205,14 +182,6 @@ MFIter::MFIter (const FabArrayBase& fabarray_, const MFItInfo& info)
     local_tile_index_map(nullptr),
     num_local_tiles(nullptr)
 {
-#ifdef AMREX_USE_OMP
-    if (dynamic) {
-#pragma omp barrier
-#pragma omp single
-        nextDynamicIndex = omp_get_num_threads();
-        // yes omp single has an implicit barrier and we need it because nextDynamicIndex is static.
-    }
-#endif
 
     Initialize();
 }
@@ -252,19 +221,12 @@ MFIter::Finalize ()
 #endif
 
     if (m_fa) {
-#ifdef AMREX_USE_OMP
-#pragma omp barrier
-#pragma omp single
-#endif
         m_fa->clearThisBD();
     }
     if (m_fa) {
         m_fa.reset(nullptr);
     }
 
-#ifdef AMREX_USE_OMP
-#pragma omp master
-#endif
     {
         depth = 0;
     }
@@ -273,9 +235,6 @@ MFIter::Finalize ()
 void
 MFIter::Initialize ()
 {
-#ifdef AMREX_USE_OMP
-#pragma omp master
-#endif
     {
         ++depth;
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(depth == 1 || MFIter::allow_multiple_mfiters,
@@ -287,7 +246,6 @@ MFIter::Initialize ()
         && (OpenMP::get_num_threads() > 1))
     { // If there are multiple gpu streams and multiple omp threads, we need
       // to sync here. Otherwise, the sync will be delayed.
-#pragma omp single
         Gpu::streamSynchronize();
     }
 #endif
@@ -347,30 +305,6 @@ MFIter::Initialize ()
             }
         }
 
-#ifdef AMREX_USE_OMP
-        int nthreads = omp_get_num_threads();
-        if (nthreads > 1)
-        {
-            if (dynamic)
-            {
-                beginIndex = omp_get_thread_num();
-            }
-            else
-            {
-                int tid = omp_get_thread_num();
-                int ntot = endIndex - beginIndex;
-                int nr   = ntot / nthreads;
-                int nlft = ntot - nr * nthreads;
-                if (tid < nlft) {  // get nr+1 items
-                    beginIndex += tid * (nr + 1);
-                    endIndex = beginIndex + nr + 1;
-                } else {           // get nr items
-                    beginIndex += tid * nr + nlft;
-                    endIndex = beginIndex + nr;
-                }
-            }
-        }
-#endif
 
         currentIndex = beginIndex;
 
@@ -522,14 +456,6 @@ MFIter::grownnodaltilebox (int dir, IntVect const& a_ng) const noexcept
 void
 MFIter::operator++ () noexcept
 {
-#ifdef AMREX_USE_OMP
-    if (dynamic)
-    {
-#pragma omp atomic capture
-        currentIndex = nextDynamicIndex++;
-    }
-    else
-#endif
     {
         ++currentIndex;
 

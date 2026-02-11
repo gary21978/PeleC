@@ -95,31 +95,18 @@ fab_to_fab_other (Vector<TagType> const& tags, int scomp, int dcomp, int ncomp, 
         int* m = &(tag.mask(i,j,k));
         bool my_turn = false;
         do {
-#if defined(AMREX_USE_SYCL)
-            my_turn = (Gpu::Atomic::Exch(m, 1) == 0);
-#else
             my_turn = (Gpu::Atomic::CAS(m, 0, 1) == 0);
-#endif
             if (my_turn) {
-#if defined(AMREX_USE_SYCL)
-                sycl::atomic_fence(sycl::memory_order::acq_rel, sycl::memory_scope::device);
-#else
                 __threadfence();
-#endif
                 for (int n = 0; n < ncomp; ++n) {
                     f(&(tag.dfab(i,j,k,n+dcomp)),
                       tag.sfab(i+tag.offset.x,j+tag.offset.y,k+tag.offset.z,n+scomp));
                 }
-#if defined(AMREX_USE_SYCL)
-                sycl::atomic_fence(sycl::memory_order::acq_rel, sycl::memory_scope::device);
-#else
                 __threadfence(); // It appears that we need this fence too if a GPU is shared.
-#endif
                 Gpu::Atomic::Exch(m, 0);
             }
             else {
 #if defined(AMREX_USE_CUDA)
-
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 700)
 #if defined(_WIN32)
                 volatile int tmp; // prevent optimization
@@ -134,17 +121,6 @@ fab_to_fab_other (Vector<TagType> const& tags, int scomp, int dcomp, int ncomp, 
 #else
                 __nanosleep(1);
 #endif
-
-#elif defined(AMREX_USE_HIP)
-
-                __builtin_amdgcn_s_sleep(1);
-
-#elif defined(AMREX_USE_SYCL)
-
-                for (int c = 0; c < 2; ++c) {
-                    __asm__ volatile(""); // prevent optimization
-                }
-
 #endif
             }
         } while (!my_turn);
@@ -293,18 +269,8 @@ void deterministic_fab_to_fab (Vector<Array4CopyTag<T0,T1>> const& a_tags, int s
     auto const nblocks = int(h_ntags.size()-1);
     constexpr auto nthreads = 256;
     amrex::launch<nthreads>(nblocks, Gpu::gpuStream(),
-#ifdef AMREX_USE_SYCL
-        [=] AMREX_GPU_DEVICE (sycl::nd_item<1> const& item) noexcept
-        [[sycl::reqd_work_group_size(nthreads)]]
-#else
         [=] AMREX_GPU_DEVICE () noexcept
-#endif
     {
-#ifdef AMREX_USE_SYCL
-        Dim1 blockIdx{item.get_group_linear_id()};
-        Dim1 threadIdx{item.get_local_linear_id()};
-#endif
-
         for (unsigned int itag = pntags[blockIdx.x]; itag < pntags[blockIdx.x+1]; ++itag) {
             auto const tag = ptag[itag];
             auto ncells = int(tag.dbox.numPts());
@@ -326,11 +292,7 @@ void deterministic_fab_to_fab (Vector<Array4CopyTag<T0,T1>> const& a_tags, int s
             }
 
             if (itag+1 < pntags[blockIdx.x+1]) {
-#ifdef AMREX_USE_SYCL
-                sycl::group_barrier(item.get_group());
-#else
                 __syncthreads();
-#endif
             }
         }
     });
@@ -351,9 +313,6 @@ FabArray<FAB>::FB_local_copy_cpu (const FB& TheFB, int scomp, int ncomp)
     bool is_thread_safe = TheFB.m_threadsafe_loc;
     if (is_thread_safe)
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
         for (int i = 0; i < N_locs; ++i)
         {
             const CopyComTag& tag = LocTags[i];
@@ -379,9 +338,6 @@ FabArray<FAB>::FB_local_copy_cpu (const FB& TheFB, int scomp, int ncomp)
             loc_copy_tags[tag.dstIndex].push_back
                 ({this->fabPtr(tag.srcIndex), tag.dbox, tag.sbox.smallEnd()-tag.dbox.smallEnd()});
         }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
         for (MFIter mfi(*this); mfi.isValid(); ++mfi)
         {
             const auto& tags = loc_copy_tags[mfi];
@@ -419,17 +375,11 @@ FabArray<FAB>::FB_local_add_cpu (const FB& TheFB, int scomp, int ncomp)
                  tag.dbox, tag.sbox.smallEnd()-tag.dbox.smallEnd()});
     }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
     for (int itag = 0; itag < N_locs; ++itag) {
         const CopyComTag& tag = LocTags[itag];
         src_fabs[itag].template copy<RunOn::Host>(this->operator[](tag.srcIndex), scomp, 0, ncomp);
     }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
     for (MFIter mfi(*this); mfi.isValid(); ++mfi)
     {
         const auto& tags = loc_copy_tags[mfi];
@@ -1354,9 +1304,6 @@ FabArray<FAB>::pack_send_buffer_cpu (FabArray<FAB> const& src, int scomp, int nc
     auto const N_snds = static_cast<int>(send_data.size());
     if (N_snds == 0) { return; }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
     for (int j = 0; j < N_snds; ++j)
     {
         if (send_size[j] > 0)
@@ -1396,9 +1343,6 @@ FabArray<FAB>::unpack_recv_buffer_cpu (FabArray<FAB>& dst, int dcomp, int ncomp,
 
     if (is_thread_safe)
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
         for (int k = 0; k < N_rcvs; ++k)
         {
             if (recv_size[k] > 0)
@@ -1442,9 +1386,6 @@ FabArray<FAB>::unpack_recv_buffer_cpu (FabArray<FAB>& dst, int dcomp, int ncomp,
             }
         }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
         for (MFIter mfi(dst); mfi.isValid(); ++mfi)
         {
             const auto& tags = recv_copy_tags[mfi];

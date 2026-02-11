@@ -133,9 +133,6 @@ InterpBndryDataT<MF>::setPhysBndryValues (const MF& mf, int mf_start, int bnd_st
 
     const Box& fine_domain = this->geom.Domain();
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (MFIter mfi(mf,MFItInfo().SetDynamic(true)); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.validbox();
@@ -172,9 +169,6 @@ InterpBndryDataT<MF>::setBndryValues (BndryRegisterT<MF> const& crse, int c_star
     {
         MFItInfo info;
         if (Gpu::notInLaunchRegion()) { info.SetDynamic(true); }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(fine,info); mfi.isValid(); ++mfi)
         {
             const Box& fine_bx  = mfi.validbox();

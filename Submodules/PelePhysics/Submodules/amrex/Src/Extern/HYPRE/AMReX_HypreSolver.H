@@ -259,7 +259,7 @@ HypreSolver<MSS>::HypreSolver (Vector<IndexType>   const& a_index_type,
     // nodes shared by multiple Boxes with OverrideSync.  So we need to use
     // a type that supports atomicAdd.  HYPRE_Int is either int or long
     // long.  The latter (i.e., long long) does not have native atomicAdd
-    // support in CUDA/HIP, whereas unsigned long long has.
+    // support in CUDA, whereas unsigned long long has.
     using AtomicInt = std::conditional_t<sizeof(HYPRE_Int) == 4,
                                          HYPRE_Int, unsigned long long>;
     fill_global_id<AtomicInt>();
@@ -336,9 +336,6 @@ HypreSolver<MSS>::fill_local_id (Marker const& marker)
 
 #else
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
     for (MFIter mfi(m_local_id[0]); mfi.isValid(); ++mfi) {
         int boxno = mfi.LocalIndex();
         for (int ivar = 0; ivar < m_nvars; ++ivar) {
@@ -396,9 +393,6 @@ HypreSolver<MSS>::fill_global_id ()
         }
     }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (MFIter mfi(m_global_id[0]); mfi.isValid(); ++mfi) {
         auto& rows_vec = m_global_id_vec[mfi];
         rows_vec.resize(m_nrows[mfi]);

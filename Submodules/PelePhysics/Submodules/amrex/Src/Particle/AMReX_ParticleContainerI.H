@@ -1199,9 +1199,6 @@ addParticles (const PCType& other, F const& f, bool local)
         }
     }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (int lev = 0; lev < other.numLevels(); ++lev)
     {
         const auto& plevel_other = other.GetParticles(lev);
@@ -1733,9 +1730,6 @@ ParticleContainer_impl<ParticleType, NArrayReal, NArrayInt, Allocator, CellAssig
             ptile_ptrs.push_back(&(kv.second));
         }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
         for (int pmap_it = 0; pmap_it < static_cast<int>(ptile_ptrs.size()); ++pmap_it)
         {
             int thread_num = OpenMP::get_thread_num();
@@ -2022,9 +2016,6 @@ ParticleContainer_impl<ParticleType, NArrayReal, NArrayInt, Allocator, CellAssig
                 pvec_ptrs.push_back(&(pmap_it->second));
             }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
             for (int pit = 0; pit < static_cast<int>(pvec_ptrs.size()); ++pit)
             {
                 auto index = grid_tile_ids[pit];
@@ -2060,9 +2051,6 @@ ParticleContainer_impl<ParticleType, NArrayReal, NArrayInt, Allocator, CellAssig
                 grid_tile_ids.push_back(soa_map_it->first);
             }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
             for (int pit = 0; pit < static_cast<int>(grid_tile_ids.size()); ++pit) // NOLINT(modernize-loop-convert)
             {
                 auto index = grid_tile_ids[pit];
@@ -2106,9 +2094,6 @@ ParticleContainer_impl<ParticleType, NArrayReal, NArrayInt, Allocator, CellAssig
         pbuff_ptrs.push_back(&(kv.second));
     }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
     for (int pmap_it = 0; pmap_it < static_cast<int>(pbuff_ptrs.size()); ++pmap_it)
     {
         int who = dest_proc_ids[pmap_it];
@@ -2625,9 +2610,6 @@ AssignCellDensitySingleLevel (int rho_index,
     mf_pointer->setVal(0);
 
     using ParConstIter = ParConstIter_impl<ParticleType, NArrayReal, NArrayInt, Allocator>;
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     {
         FArrayBox local_rho;
         for (ParConstIter pti(*this, lev); pti.isValid(); ++pti) {
@@ -2635,17 +2617,6 @@ AssignCellDensitySingleLevel (int rho_index,
             auto ptd = pti.GetParticleTile().getConstParticleTileData();
             FArrayBox& fab = (*mf_pointer)[pti];
             auto rhoarr = fab.array();
-#ifdef AMREX_USE_OMP
-            Box tile_box;
-            if (Gpu::notInLaunchRegion())
-            {
-                tile_box = pti.tilebox();
-                tile_box.grow(mf_pointer->nGrow());
-                local_rho.resize(tile_box,ncomp);
-                local_rho.setVal<RunOn::Host>(0.0);
-                rhoarr = local_rho.array();
-            }
-#endif
 
             if (particle_lvl_offset == 0)
             {
@@ -2664,12 +2635,6 @@ AssignCellDensitySingleLevel (int rho_index,
                 });
             }
 
-#ifdef AMREX_USE_OMP
-            if (Gpu::notInLaunchRegion())
-            {
-                fab.atomicAdd<RunOn::Host>(local_rho, tile_box, tile_box, 0, 0, ncomp);
-            }
-#endif
         }
     }
 

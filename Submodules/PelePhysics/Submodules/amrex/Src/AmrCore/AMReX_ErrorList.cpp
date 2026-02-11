@@ -247,9 +247,6 @@ AMRErrorTag::operator() (TagBoxArray&    tba,
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_userfunc!=nullptr,
                                          "UserFunc not properly set in AMRErrorTag");
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(tba,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const auto& bx    = mfi.tilebox();

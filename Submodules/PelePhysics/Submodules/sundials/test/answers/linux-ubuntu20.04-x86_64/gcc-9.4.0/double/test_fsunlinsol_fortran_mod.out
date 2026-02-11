@@ -1,6 +1,0 @@
- PASSED test -- FSUNLinSolGetType
- PASSED test -- FSUNLinSolSetup
- PASSED test -- FSUNLinSolSolve
- PASSED test -- FSUNLinSolFree
- SUCCESS: FSUNLinSol module passed all tests
-   

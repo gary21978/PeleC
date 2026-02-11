@@ -189,9 +189,6 @@ local_copy_cpu (FabArray<FAB>& dest, const FabArray<FAB>& src, int dcomp, int sc
                 FabArrayBase::CopyComTagsContainer const& local_tags, DTOS const& dtos, Proj const& proj) noexcept {
     const auto N_locs = static_cast<int>(local_tags.size());
     if (N_locs == 0) { return; }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
     for (int itag = 0; itag < N_locs; ++itag) {
         const auto& tag = local_tags[itag];
         auto const& sfab =  src.const_array(tag.srcIndex);
@@ -221,9 +218,6 @@ unpack_recv_buffer_cpu (FabArray<FAB>& mf, int dcomp, int ncomp, Vector<char*> c
     if (N_rcvs == 0) { return; }
 
     using T = typename FAB::value_type;
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
     for (int ircv = 0; ircv < N_rcvs; ++ircv) {
         const char* dptr = recv_data[ircv];
         auto const& cctc = *recv_cctc[ircv];
@@ -287,18 +281,6 @@ unpack_recv_buffer_gpu (FabArray<FAB>& mf, int scomp, int ncomp,
     if (N_rcvs == 0) { return; }
 
     char* pbuffer = recv_data[0];
-#if 0
-    std::size_t szbuffer = 0;
-    // For linear solver test on summit, this is slower than writing to
-    // pinned memory directly on device.
-    if (not ParallelDescriptor::UseGpuAwareMpi()) {
-        // Memory in recv_data is pinned.
-        szbuffer = (recv_data[N_rcvs-1]-recv_data[0]) + recv_size[N_rcvs-1];
-        pbuffer = (char*)The_Arena()->alloc(szbuffer);
-        Gpu::copyAsync(Gpu::hostToDevice,recv_data[0],recv_data[0]+szbuffer,pbuffer);
-        Gpu::streamSynchronize();
-    }
-#endif
 
     using T = typename FAB::value_type;
     using TagType = Array4Array4Box<T>;
@@ -543,9 +525,6 @@ Rotate90 (FabArray<FAB>& mf, int scomp, int ncomp, IntVect const& nghost, Box co
                                Identity{});
 
     Box corner(-nghost, IntVect{AMREX_D_DECL(-1,-1,domain.bigEnd(2)+nghost[2])});
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (MFIter mfi(mf); mfi.isValid(); ++mfi) {
         Box const& bx = corner & mfi.fabbox();
         if (bx.ok()) {

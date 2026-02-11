@@ -7,9 +7,6 @@
 #include <AMReX_algoim.H>
 #endif
 
-#ifdef AMREX_USE_OMP
-#include <omp.h>
-#endif
 
 namespace amrex {
 
@@ -142,9 +139,6 @@ MLNodeLaplacian::averageDownCoeffsSameAmrLevel (int amrlev)
             MultiFab* pcrse = (need_parallel_copy) ? &cfine : &crse;
 
             if (regular_coarsening) {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
                 for (MFIter mfi(*pcrse, TilingIfNotGPU()); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.tilebox();
@@ -174,9 +168,6 @@ MLNodeLaplacian::averageDownCoeffsSameAmrLevel (int amrlev)
 #endif
                 }
             } else {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
                 for (MFIter mfi(*pcrse, TilingIfNotGPU()); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.tilebox();
@@ -271,9 +262,6 @@ MLNodeLaplacian::Fapply (int amrlev, int mglev, MultiFab& out, const MultiFab& i
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
         for (MFIter mfi(out,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
@@ -391,9 +379,6 @@ MLNodeLaplacian::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFab& 
             } else
 #endif
             {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
                 for (MFIter mfi(sol); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.validbox();
@@ -428,9 +413,6 @@ MLNodeLaplacian::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFab& 
             } else
 #endif
             {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
                 for (MFIter mfi(sol); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.validbox();
@@ -474,9 +456,6 @@ MLNodeLaplacian::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFab& 
 #endif
             {
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
                 for (MFIter mfi(sol); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.validbox();
@@ -520,9 +499,6 @@ MLNodeLaplacian::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFab& 
             } else
 #endif
             {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
                 for (MFIter mfi(sol); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.validbox();
@@ -589,9 +565,6 @@ MLNodeLaplacian::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFab& 
             } else
 #endif
             {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
                 for (MFIter mfi(sol,true); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.tilebox();
@@ -620,9 +593,6 @@ MLNodeLaplacian::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFab& 
             } else
 #endif
             {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
                 for (MFIter mfi(sol,true); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.tilebox();
@@ -653,9 +623,6 @@ MLNodeLaplacian::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFab& 
             } else
 #endif
             {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
                 for (MFIter mfi(sol,true); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.tilebox();
@@ -687,9 +654,6 @@ MLNodeLaplacian::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFab& 
             } else
 #endif
             {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
                 for (MFIter mfi(sol,true); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.tilebox();
@@ -718,9 +682,6 @@ MLNodeLaplacian::updateVelocity (const Vector<MultiFab*>& vel, const Vector<Mult
     bool is_rz = m_is_rz;
 #endif
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (int amrlev = 0; amrlev < m_num_amr_levels; ++amrlev)
     {
         const auto& sigma = m_sigma[amrlev][0][0];
@@ -817,9 +778,6 @@ MLNodeLaplacian::compGrad (int amrlev, MultiFab& grad, MultiFab& sol) const
     const MultiFab* intg = m_integral[amrlev].get();
 #endif
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (MFIter mfi(grad, TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.tilebox();
@@ -880,9 +838,6 @@ MLNodeLaplacian::getFluxes (const Vector<MultiFab*> & a_flux, const Vector<Multi
 
     AMREX_ASSERT(a_flux[0]->nComp() >= AMREX_SPACEDIM);
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (int amrlev = 0; amrlev < m_num_amr_levels; ++amrlev)
     {
         const auto& sigma = m_sigma[amrlev][0][0];
@@ -1032,9 +987,6 @@ MLNodeLaplacian::compRHS (const Vector<MultiFab*>& rhs, const Vector<MultiFab*>&
             }
             const auto dlo = domain.smallEnd();
             const auto dhi = domain.bigEnd();
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(*vel[ilev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box& bx = mfi.growntilebox(1);
@@ -1090,9 +1042,6 @@ MLNodeLaplacian::compRHS (const Vector<MultiFab*>& rhs, const Vector<MultiFab*>&
 
         MFItInfo mfi_info;
         if (Gpu::notInLaunchRegion()) { mfi_info.EnableTiling().SetDynamic(true); }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(*rhs[ilev],mfi_info); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
@@ -1213,9 +1162,6 @@ MLNodeLaplacian::compRHS (const Vector<MultiFab*>& rhs, const Vector<MultiFab*>&
 
         MFItInfo mfi_info;
         if (Gpu::notInLaunchRegion()) { mfi_info.EnableTiling().SetDynamic(true); }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(*frhs[ilev],mfi_info); mfi.isValid(); ++mfi)
         {
             const Box& cbx = mfi.tilebox();
@@ -1327,9 +1273,6 @@ MLNodeLaplacian::compRHS (const Vector<MultiFab*>& rhs, const Vector<MultiFab*>&
 
         MFItInfo mfi_info;
         if (Gpu::notInLaunchRegion()) { mfi_info.EnableTiling().SetDynamic(true); }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(*rhs[ilev],mfi_info); mfi.isValid(); ++mfi)
         {
             if (has_fine_bndry[mfi])

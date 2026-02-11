@@ -146,9 +146,6 @@ MLCellABecLapT<MF>::define (const Vector<Geometry>& a_geom,
             ReduceOps<ReduceOpSum> reduce_op;
             ReduceData<int> reduce_data(reduce_op);
             using ReduceTuple = typename decltype(reduce_data)::Type;
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(*crse, TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box& bx = mfi.tilebox();
@@ -212,9 +209,6 @@ MLCellABecLapT<MF>::define (const Vector<Geometry>& a_geom,
             } else
 #endif
             {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
                 for (MFIter mfi(*(this->m_overset_mask[amrlev][mglev]), TilingIfNotGPU()); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.tilebox();
@@ -330,9 +324,6 @@ MLCellABecLapT<MF>::applyInhomogNeumannTerm (int amrlev, MF& rhs) const
     MFItInfo mfi_info;
     if (Gpu::notInLaunchRegion()) { mfi_info.SetDynamic(true); }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (MFIter mfi(rhs, mfi_info); mfi.isValid(); ++mfi)
     {
         const Box& vbx = mfi.validbox();
@@ -553,9 +544,6 @@ MLCellABecLapT<MF>::addInhomogNeumannFlux (
     MFItInfo mfi_info;
     if (Gpu::notInLaunchRegion()) { mfi_info.SetDynamic(true); }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (MFIter mfi(sol, mfi_info); mfi.isValid(); ++mfi)
     {
         Box const& vbx = mfi.validbox();
@@ -651,9 +639,6 @@ MLCellABecLapT<MF>::applyOverset (int amrlev, MF& rhs) const
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(*m_overset_mask[amrlev][0],TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box& bx = mfi.tilebox();

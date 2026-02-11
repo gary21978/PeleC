@@ -58,9 +58,6 @@ MFPCInterp::interp (MultiFab const& crsemf, int ccomp, MultiFab& finemf, int fco
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
         for (MFIter mfi(finemf); mfi.isValid(); ++mfi) {
             auto const& fine = finemf.array(mfi);
             auto const& crse = crsemf.const_array(mfi);
@@ -239,9 +236,6 @@ MFCellConsLinInterp::interp (MultiFab const& crsemf, int ccomp, MultiFab& finemf
     {
         BCRec const* pbc = bcs.data() + bcomp;
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
         {
             FArrayBox tmpfab;
             for (MFIter mfi(finemf); mfi.isValid(); ++mfi) {
@@ -439,9 +433,6 @@ MFCellConsLinMinmaxLimitInterp::interp (MultiFab const& crsemf, int ccomp, Multi
     {
         BCRec const* pbc = bcs.data() + bcomp;
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
         {
             FArrayBox tmpfab;
             for (MFIter mfi(finemf); mfi.isValid(); ++mfi) {
@@ -523,9 +514,6 @@ MFCellBilinear::interp (MultiFab const& crsemf, int ccomp, MultiFab& finemf, int
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
         for (MFIter mfi(finemf); mfi.isValid(); ++mfi) {
             auto const& fine = finemf.array(mfi);
             auto const& crse = crsemf.const_array(mfi);
@@ -580,9 +568,6 @@ MFNodeBilinear::interp (MultiFab const& crsemf, int ccomp, MultiFab& finemf, int
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
         for (MFIter mfi(finemf); mfi.isValid(); ++mfi) {
             auto const& fine = finemf.array(mfi);
             auto const& crse = crsemf.const_array(mfi);

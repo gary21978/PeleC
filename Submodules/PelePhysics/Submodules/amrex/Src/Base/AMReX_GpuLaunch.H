@@ -36,11 +36,6 @@
         amrex::launch_global<MT><<<blocks, threads, sharedMem, stream>>>(__VA_ARGS__)
 #  define AMREX_LAUNCH_KERNEL_NOBOUND(blocks, threads, sharedMem, stream, ... ) \
         amrex::launch_global    <<<blocks, threads, sharedMem, stream>>>(__VA_ARGS__)
-#elif defined(AMREX_USE_HIP)
-#  define AMREX_LAUNCH_KERNEL(MT, blocks, threads, sharedMem, stream, ... ) \
-        hipLaunchKernelGGL(launch_global<MT>, blocks, threads, sharedMem, stream, __VA_ARGS__)
-#  define AMREX_LAUNCH_KERNEL_NOBOUND(blocks, threads, sharedMem, stream, ... ) \
-        hipLaunchKernelGGL(launch_global    , blocks, threads, sharedMem, stream, __VA_ARGS__)
 #endif
 
 
@@ -48,9 +43,9 @@ namespace amrex {
 
 // We cannot take rvalue lambdas.
 // ************************************************
-//  Variadic lambda function wrappers for C++ CUDA/HIP Kernel calls.
+//  Variadic lambda function wrappers for C++ CUDA Kernel calls.
 
-#if defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
+#if defined(AMREX_USE_CUDA)
     template<class L, class... Lambdas>
     AMREX_GPU_GLOBAL void launch_global (L f0, Lambdas... fs) { f0(); call_device(fs...); }
 
@@ -137,12 +132,6 @@ namespace Gpu {
             // If we change this, we must make sure it doesn't break FabArrayUtility Reduce*,
             // which assumes the decomposition is 1D.
             Gpu::Device::n_threads_and_blocks( ((box.numPts()+AMREX_GPU_NCELLS_PER_THREAD-1)/AMREX_GPU_NCELLS_PER_THREAD), numBlocks, numThreads );
-#if 0
-            Box b = amrex::surroundingNodes(box);
-            b -= box.smallEnd();
-            b.coarsen(IntVect(AMREX_D_DECL(1,AMREX_GPU_Y_STRIDE,AMREX_GPU_Z_STRIDE)));
-            Gpu::Device::c_threads_and_blocks(b.loVect(), b.hiVect(), numBlocks, numThreads);
-#endif
         }
         ExecutionConfig (const Box& box, int comps) noexcept {
             const Box& b = amrex::surroundingNodes(box);
@@ -269,7 +258,6 @@ template <typename T, typename L, typename M=std::enable_if_t<std::is_integral_v
 AMREX_ATTRIBUTE_FLATTEN_FOR
 void ParallelForOMP (T n, L const& f) noexcept
 {
-#pragma omp parallel for
     for (T i = 0; i < n; ++i) {
         f(i);
     }
@@ -282,23 +270,18 @@ void ParallelForOMP (Box const& box, L const& f) noexcept
     auto lo = amrex::lbound(box);
     auto hi = amrex::ubound(box);
 #if (AMREX_SPACEDIM == 1)
-#pragma omp parallel for
     for (int i = lo.x; i <= hi.x; ++i) {
         f(i,0,0);
     }
 #elif (AMREX_SPACEDIM == 2)
-#pragma omp parallel for
     for     (int j = lo.y; j <= hi.y; ++j) {
-        AMREX_PRAGMA_SIMD
         for (int i = lo.x; i <= hi.x; ++i) {
             f(i,j,0);
         }
     }
 #else
-#pragma omp parallel for collapse(2)
     for         (int k = lo.z; k <= hi.z; ++k) {
         for     (int j = lo.y; j <= hi.y; ++j) {
-            AMREX_PRAGMA_SIMD
             for (int i = lo.x; i <= hi.x; ++i) {
                 f(i,j,k);
             }
@@ -314,28 +297,23 @@ void ParallelForOMP (Box const& box, T ncomp, L const& f) noexcept
     auto lo = amrex::lbound(box);
     auto hi = amrex::ubound(box);
 #if (AMREX_SPACEDIM == 1)
-#pragma omp parallel for collapse(2)
     for (T n = 0; n < ncomp; ++n) {
         for (int i = lo.x; i <= hi.x; ++i) {
             f(i,0,0,n);
         }
     }
 #elif (AMREX_SPACEDIM == 2)
-#pragma omp parallel for collapse(2)
     for (T n = 0; n < ncomp; ++n) {
         for     (int j = lo.y; j <= hi.y; ++j) {
-            AMREX_PRAGMA_SIMD
             for (int i = lo.x; i <= hi.x; ++i) {
                 f(i,j,0,n);
             }
         }
     }
 #else
-#pragma omp parallel for collapse(3)
     for (T n = 0; n < ncomp; ++n) {
         for         (int k = lo.z; k <= hi.z; ++k) {
             for     (int j = lo.y; j <= hi.y; ++j) {
-                AMREX_PRAGMA_SIMD
                 for (int i = lo.x; i <= hi.x; ++i) {
                     f(i,j,k,n);
                 }

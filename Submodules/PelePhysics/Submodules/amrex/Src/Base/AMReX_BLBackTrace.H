@@ -2,9 +2,6 @@
 #define AMREX_BL_BACKTRACE_H_
 #include <AMReX_Config.H>
 
-#ifdef AMREX_USE_OMP
-#include <omp.h>
-#endif
 
 #include <stack>
 #include <string>
@@ -29,7 +26,6 @@ struct BLBackTrace
     static std::stack<std::pair<std::string, std::string> > bt_stack;
 // threadprivate here doesn't work with Cray, Intel, and Fujitsu
 #if defined(AMREX_USE_OMP) && !defined(_CRAYC) && !defined(__INTEL_COMPILER) && !defined(__PGI) && !defined(__NVCOMPILER) && !defined(__FUJITSU)
-#pragma omp threadprivate(bt_stack)
 #endif
 };
 

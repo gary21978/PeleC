@@ -46,12 +46,6 @@ extern Long private_total_bytes_allocated_in_fabs;     //!< total bytes at any g
 extern Long private_total_bytes_allocated_in_fabs_hwm; //!< high-water-mark over a given interval
 extern Long private_total_cells_allocated_in_fabs;     //!< total cells at any given time
 extern Long private_total_cells_allocated_in_fabs_hwm; //!< high-water-mark over a given interval
-#ifdef AMREX_USE_OMP
-#pragma omp threadprivate(private_total_bytes_allocated_in_fabs)
-#pragma omp threadprivate(private_total_bytes_allocated_in_fabs_hwm)
-#pragma omp threadprivate(private_total_cells_allocated_in_fabs)
-#pragma omp threadprivate(private_total_cells_allocated_in_fabs_hwm)
-#endif
 
 Long TotalBytesAllocatedInFabs () noexcept;
 Long TotalBytesAllocatedInFabsHWM () noexcept;
@@ -1197,12 +1191,7 @@ BaseFab<T>::prefetchToHost () const noexcept
 {
 #ifdef AMREX_USE_GPU
     if (this->arena()->isManaged()) {
-#if defined(AMREX_USE_SYCL)
-        // xxxxx SYCL todo: prefetchToHost
-        // std::size_t s = sizeof(T)*this->nvar*this->domain.numPts();
-        // auto& q = Gpu::Device::streamQueue();
-        // q.submit([&] (sycl::handler& h) { h.prefetch(this->dptr, s); });
-#elif defined(AMREX_USE_CUDA) && !defined(_WIN32)
+#if defined(AMREX_USE_CUDA) && !defined(_WIN32)
         if (Gpu::Device::devicePropMajor() >= 6) {
             std::size_t s = sizeof(T)*this->nvar*this->domain.numPts();
 #if defined(__CUDACC__) && (__CUDACC_VER_MAJOR__ >= 13)
@@ -1217,8 +1206,6 @@ BaseFab<T>::prefetchToHost () const noexcept
                                                       Gpu::gpuStream()));
 #endif
         }
-#elif defined(AMREX_USE_HIP)
-        // xxxxx HIP FIX HERE after managed memory is supported
 #endif
     }
 #endif
@@ -1230,11 +1217,7 @@ BaseFab<T>::prefetchToDevice () const noexcept
 {
 #ifdef AMREX_USE_GPU
     if (this->arena()->isManaged()) {
-#if defined(AMREX_USE_SYCL)
-        std::size_t s = sizeof(T)*this->nvar*this->domain.numPts();
-        auto& q = Gpu::Device::streamQueue();
-        q.submit([&] (sycl::handler& h) { h.prefetch(this->dptr, s); });
-#elif defined(AMREX_USE_CUDA) && !defined(_WIN32)
+#if defined(AMREX_USE_CUDA) && !defined(_WIN32)
         if (Gpu::Device::devicePropMajor() >= 6) {
             std::size_t s = sizeof(T)*this->nvar*this->domain.numPts();
 #if defined(__CUDACC__) && (__CUDACC_VER_MAJOR__ >= 13)
@@ -1249,8 +1232,6 @@ BaseFab<T>::prefetchToDevice () const noexcept
                                                       Gpu::gpuStream()));
 #endif
         }
-#elif defined(AMREX_USE_HIP)
-        // xxxxx HIP FIX HERE after managed memory is supported
 #endif
     }
 #endif
@@ -2934,7 +2915,6 @@ BaseFab<T>::lockAdd (const BaseFab<T>& src, const Box& srcbox, const Box& destbo
                         for (int j = lo.y; j <= hi.y; ++j) {
                             auto      * pdst = d.ptr(dlo.x,j         ,k         ,n+destcomp);
                             auto const* psrc = s.ptr(slo.x,j+offset.y,k+offset.z,n+ srccomp);
-#pragma omp simd
                             for (int ii = 0; ii < len.x; ++ii) {
                                 pdst[ii] += psrc[ii];
                             }

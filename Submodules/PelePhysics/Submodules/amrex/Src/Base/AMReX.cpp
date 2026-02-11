@@ -14,10 +14,6 @@
 #include <AMReX_Geometry.H>
 #include <AMReX_Gpu.H>
 
-#ifdef AMREX_USE_FFT
-#include <AMReX_FFT.H>
-#endif
-
 #ifdef AMREX_USE_HYPRE
 #include <_hypre_utilities.h>
 #ifdef AMREX_USE_CUDA
@@ -55,10 +51,6 @@
 #include <AMReX_MemProfiler.H>
 #endif
 
-#ifdef AMREX_USE_OMP
-#include <AMReX_OpenMP.H>
-#include <omp.h>
-#endif
 
 #if defined(__APPLE__) && defined(__x86_64__)
 #include <xmmintrin.h>
@@ -158,7 +150,7 @@ namespace {
 #ifdef AMREX_USE_HYPRE
 namespace {
     bool init_hypre = true;
-#if defined(HYPRE_USING_CUDA) || defined(HYPRE_USING_HIP)
+#if defined(HYPRE_USING_CUDA)
     bool hypre_spgemm_use_vendor = false;
     bool hypre_spmv_use_vendor = false;
     bool hypre_sptrans_use_vendor = false;
@@ -252,9 +244,6 @@ amrex::Error_host (const char* type, const char * msg)
     } else {
         write_lib_id(type);
         write_to_stderr_without_buffering(msg);
-#ifdef AMREX_USE_OMP
-#pragma omp critical (amrex_abort_omp_critical)
-#endif
         ParallelDescriptor::Abort();
     }
 #endif
@@ -302,9 +291,6 @@ amrex::Assert_host (const char* EX, const char* file, int line, const char* msg,
         throw RuntimeError(buf.data());
     } else {
        write_to_stderr_without_buffering(buf.data());
-#ifdef AMREX_USE_OMP
-#pragma omp critical (amrex_abort_omp_critical)
-#endif
        ParallelDescriptor::Abort();
    }
 #endif
@@ -510,35 +496,6 @@ amrex::Initialize (int& argc, char**& argv, bool build_parm_parse,
     }
 #endif
 
-#ifdef AMREX_USE_OMP
-    amrex::OpenMP::Initialize();
-
-    // status output
-    if (system::verbose > 0) {
-//    static_assert(_OPENMP >= 201107, "OpenMP >= 3.1 is required.");
-        amrex::Print() << "OMP initialized with "
-                       << omp_get_max_threads()
-                       << " OMP threads\n";
-    }
-
-    // warn if over-subscription is detected
-    if (system::verbose > 0) {
-        auto ncores = int(std::thread::hardware_concurrency());
-        if (ncores != 0 && // It might be zero according to the C++ standard.
-            ncores < omp_get_max_threads() * ParallelDescriptor::NProcsPerNode())
-        {
-            amrex::Print(amrex::ErrorStream())
-                << "AMReX Warning: You might be oversubscribing CPU cores with OMP threads.\n"
-                << "               There are " << ncores << " cores per node.\n"
-#if defined(AMREX_USE_MPI)
-                << "               There are " << ParallelDescriptor::NProcsPerNode() << " MPI ranks (processes) per node.\n"
-#endif
-                << "               But OMP is initialized with " << omp_get_max_threads() << " threads per process.\n"
-                << "               You should consider setting OMP_NUM_THREADS="
-                << ncores/ParallelDescriptor::NProcsPerNode() << " or less in the environment.\n";
-        }
-    }
-#endif
 
     Machine::Initialize();
 
@@ -558,15 +515,6 @@ amrex::Initialize (int& argc, char**& argv, bool build_parm_parse,
         pp.queryAdd("throw_exception", system::throw_exception);
         pp.query("call_addr2line", system::call_addr2line);
         pp.queryAdd("abort_on_unused_inputs", system::abort_on_unused_inputs);
-
-#ifdef AMREX_USE_SYCL
-        // Disable SIGSEGV handling by default for Intel GPUs, because it is
-        // currently used by their managed memory implementation with discrete
-        // GPUs
-        if (Gpu::Device::deviceVendor().find("Intel") != std::string::npos) {
-            system::handle_sigsegv = 0;
-        }
-#endif
 
         if (system::signal_handling)
         {
@@ -665,7 +613,7 @@ amrex::Initialize (int& argc, char**& argv, bool build_parm_parse,
 
 #ifdef AMREX_USE_HYPRE
         pp.queryAdd("init_hypre", init_hypre);
-#if defined(HYPRE_USING_CUDA) || defined(HYPRE_USING_HIP)
+#if defined(HYPRE_USING_CUDA)
         pp.queryAdd("hypre_spgemm_use_vendor", hypre_spgemm_use_vendor);
         pp.queryAdd("hypre_spmv_use_vendor", hypre_spmv_use_vendor);
         pp.queryAdd("hypre_sptrans_use_vendor", hypre_sptrans_use_vendor);
@@ -701,10 +649,6 @@ amrex::Initialize (int& argc, char**& argv, bool build_parm_parse,
     }
     VectorGrowthStrategy::Initialize();
 
-#ifdef AMREX_USE_FFT
-    FFT::Initialize();
-#endif
-
 #ifdef AMREX_USE_EB
     EB2::Initialize();
 #endif
@@ -715,7 +659,7 @@ amrex::Initialize (int& argc, char**& argv, bool build_parm_parse,
 #ifdef AMREX_USE_HYPRE
     if (init_hypre) {
         HYPRE_Init();
-#if defined(HYPRE_USING_CUDA) || defined(HYPRE_USING_HIP)
+#if defined(HYPRE_USING_CUDA)
 
 #if defined(HYPRE_RELEASE_NUMBER) && (HYPRE_RELEASE_NUMBER >= 22400)
 
@@ -834,10 +778,6 @@ amrex::Finalize (amrex::AMReX* pamrex)
         if (ParallelDescriptor::NProcs() == 1) {
             if (mp_tot > 0) {
                 amrex::Print() << "MemPool: "
-#ifdef AMREX_USE_OMP
-                               << "min used in a thread: " << mp_min << " MB, "
-                               << "max used in a thread: " << mp_max << " MB, "
-#endif
                                << "tot used: " << mp_tot << " MB." << '\n';
             }
         } else {
@@ -896,9 +836,6 @@ amrex::Finalize (amrex::AMReX* pamrex)
     Gpu::Device::Finalize();
 #endif
 
-#ifdef AMREX_USE_OMP
-    amrex::OpenMP::Finalize();
-#endif
 
 #if defined(AMREX_USE_UPCXX)
     upcxx::finalize();

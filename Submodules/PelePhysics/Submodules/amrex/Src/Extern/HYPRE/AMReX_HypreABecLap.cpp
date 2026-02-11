@@ -275,9 +275,6 @@ HypreABecLap::loadVectors (MultiFab& soln, const MultiFab& rhs)
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(rhs_diag,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();

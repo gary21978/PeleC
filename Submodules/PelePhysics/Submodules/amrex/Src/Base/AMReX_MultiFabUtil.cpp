@@ -84,9 +84,6 @@ namespace amrex
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(cc,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box bx = mfi.growntilebox(ng_vect);
@@ -133,9 +130,6 @@ namespace amrex
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(cc,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box bx = mfi.growntilebox(ng_vect);
@@ -211,9 +205,6 @@ namespace amrex
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(cc,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box bx = mfi.tilebox();
@@ -299,9 +290,6 @@ namespace amrex
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(cc,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 AMREX_D_TERM(const Box& xbx = mfi.nodaltilebox(0);,
@@ -390,9 +378,6 @@ namespace amrex
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(crse_S_fine,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 //  NOTE: The tilebox is defined at the coarse level.
@@ -443,9 +428,6 @@ namespace amrex
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(crse_S_fine, TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 //  NOTE: The tilebox is defined at the coarse level.
@@ -518,9 +500,6 @@ namespace amrex
             } else
 #endif
             {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if(Gpu::notInLaunchRegion())
-#endif
                 for (MFIter mfi(crse,TilingIfNotGPU()); mfi.isValid(); ++mfi)
                 {
                     const Box& bx = mfi.growntilebox(ngcrse);
@@ -594,9 +573,6 @@ namespace amrex
             return nullptr;
         }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(*slice, TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             int slice_gid = mfi.index();
@@ -649,9 +625,6 @@ namespace amrex
 
         const BoxArray& cfba = amrex::coarsen(fba,ratio);
         const std::vector<IntVect>& pshifts = period.shiftIntVect();
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (!run_on_gpu)
-#endif
         {
             std::vector <std::pair<int,Box> > isects;
             for (MFIter mfi(mask); mfi.isValid(); ++mfi)
@@ -730,9 +703,6 @@ namespace amrex
 
         const GpuArray<Real,AMREX_SPACEDIM> dxinv = geom.InvCellSizeArray();
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(divu,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
@@ -780,9 +750,6 @@ namespace amrex
 
         const GpuArray<Real,AMREX_SPACEDIM> dxinv = geom.InvCellSizeArray();
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(grad,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.tilebox();
@@ -866,22 +833,11 @@ namespace amrex
                 }
                 int n2dblocks = (n2d+AMREX_GPU_MAX_THREADS-1)/AMREX_GPU_MAX_THREADS;
                 int nblocks = n2dblocks * b.length(direction);
-#ifdef AMREX_USE_SYCL
-                std::size_t shared_mem_byte = sizeof(Real)*Gpu::Device::warp_size;
-                amrex::launch<AMREX_GPU_MAX_THREADS>(nblocks, shared_mem_byte, Gpu::gpuStream(),
-                              [=] AMREX_GPU_DEVICE (Gpu::Handler const& h) noexcept
-#else
                 amrex::launch<AMREX_GPU_MAX_THREADS>(nblocks, Gpu::gpuStream(),
                               [=] AMREX_GPU_DEVICE () noexcept
-#endif
                 {
-#ifdef AMREX_USE_SYCL
-                    int i1d = h.blockIdx() / n2dblocks;
-                    int i2d = h.threadIdx() + AMREX_GPU_MAX_THREADS*(h.blockIdx()-i1d*n2dblocks);
-#else
                     int i1d = blockIdx.x / n2dblocks;
                     int i2d = threadIdx.x + AMREX_GPU_MAX_THREADS*(blockIdx.x-i1d*n2dblocks);
-#endif
                     int i2dy = i2d / n2dx;
                     int i2dx = i2d - i2dy*n2dx;
                     int i, j, k, idir;
@@ -903,11 +859,7 @@ namespace amrex
                     }
                     for (int n = 0; n < ncomp; ++n) {
                         Real r = (i2d < n2d) ? fab(i,j,k,n+icomp) : Real(0.0);
-#ifdef AMREX_USE_SYCL
-                        Gpu::deviceReduceSum_full(p+n+ncomp*idir, r, h);
-#else
                         Gpu::deviceReduceSum_full(p+n+ncomp*idir, r);
-#endif
                     }
                 });
             }
@@ -933,9 +885,6 @@ namespace amrex
                 pp[i] = other_hv[i-1].data();
             }
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel
-#endif
             for (MFIter mfi(mf,true); mfi.isValid(); ++mfi) {
                 Box const& b = mfi.tilebox();
                 auto const& fab = mf.const_array(mfi);
@@ -959,9 +908,6 @@ namespace amrex
             }
 
             if (! other_hv.empty()) {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
                 for (int i = 0; i < n1d; ++i) {
                     for (auto const& v : other_hv) {
                         hv[i] += v[i];
@@ -1142,9 +1088,6 @@ namespace amrex
         MultiFab tmp(amrex::coarsen(fmf.boxArray(), ratio), fmf.DistributionMap(),
                      ncomp, 0);
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         {
 #if (AMREX_SPACEDIM > 1)
             FArrayBox xtmp;
@@ -1220,9 +1163,6 @@ namespace amrex
 
     void FillRandom (MultiFab& mf, int scomp, int ncomp)
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(mf); mfi.isValid(); ++mfi)
         {
             auto* p = mf[mfi].dataPtr(scomp);
@@ -1233,9 +1173,6 @@ namespace amrex
 
     void FillRandomNormal (MultiFab& mf, int scomp, int ncomp, Real mean, Real stddev)
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(mf); mfi.isValid(); ++mfi)
         {
             auto* p = mf[mfi].dataPtr(scomp);
@@ -1284,9 +1221,6 @@ namespace amrex
                 banew.convert(mf[ilev]->ixType());
                 DistributionMapping dmnew(std::move(procmap));
                 rmf[ilev].define(banew, dmnew, ncomp, 0);
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
                 for (MFIter mfi(rmf[ilev], TilingIfNotGPU()); mfi.isValid(); ++mfi) {
                    rmf[ilev][mfi].template copy<RunOn::Device>
                        ((*mf[ilev])[localmap[mfi.LocalIndex()]], mfi.tilebox());

@@ -5,9 +5,6 @@
 #include <AMReX_algoim.H>
 #endif
 
-#ifdef AMREX_USE_OMP
-#include <omp.h>
-#endif
 
 namespace amrex {
 
@@ -36,9 +33,6 @@ MLNodeLaplacian::buildIntegral ()
 
             MFItInfo mfi_info;
             if (Gpu::notInLaunchRegion()) { mfi_info.EnableTiling().SetDynamic(true); }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(*intg,mfi_info); mfi.isValid(); ++mfi)
             {
                 const Box& bx = mfi.growntilebox();
@@ -105,9 +99,6 @@ MLNodeLaplacian::buildSurfaceIntegral ()
 
             MFItInfo mfi_info;
             if (Gpu::notInLaunchRegion()) { mfi_info.EnableTiling().SetDynamic(true); }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(*sintg,mfi_info); mfi.isValid(); ++mfi)
             {
                 const Box& bx = mfi.growntilebox();

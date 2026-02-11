@@ -266,9 +266,6 @@ namespace amrex
     {
         T mf_out(mf_in.boxArray(), mf_in.DistributionMap(), mf_in.nComp(), mf_in.nGrowVect());
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(mf_in); mfi.isValid(); ++mfi)
         {
             const Long n = mfi.fabbox().numPts() * mf_in.nComp();
@@ -615,9 +612,6 @@ void average_down_nodal (const FabArray<FAB>& fine, FabArray<FAB>& crse,
 
     if (mfiter_is_definitely_safe || isMFIterSafe(fine, crse))
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(crse,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box& bx = mfi.growntilebox(ngcrse);
@@ -693,9 +687,6 @@ void average_down (const FabArray<FAB>& S_fine, FabArray<FAB>& S_crse,
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(S_crse,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 //  NOTE: The tilebox is defined at the coarse level.
@@ -744,9 +735,6 @@ void average_down (const FabArray<FAB>& S_fine, FabArray<FAB>& S_crse,
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(crse_S_fine,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 //  NOTE: The tilebox is defined at the coarse level.
@@ -817,9 +805,6 @@ NormHelper (const MultiFab& x, int xcomp,
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (!system::regtest_reduction) reduction(+:sm)
-#endif
         for (MFIter mfi(x,true); mfi.isValid(); ++mfi)
         {
             Box const& bx = mfi.growntilebox(nghost);
@@ -885,9 +870,6 @@ NormHelper (const MMF& mask,
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (!system::regtest_reduction) reduction(+:sm)
-#endif
         for (MFIter mfi(x,true); mfi.isValid(); ++mfi)
         {
             Box const& bx = mfi.growntilebox(nghost);
@@ -957,9 +939,6 @@ void average_face_to_cellcenter (CMF& cc, int dcomp,
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(cc,TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             const Box bx = mfi.growntilebox(ng_vect);
@@ -1059,9 +1038,6 @@ void average_down_faces (const FabArray<FAB>& fine, FabArray<FAB>& crse,
         } else
 #endif
         {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(crse,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box& bx = mfi.growntilebox(ngcrse);
@@ -1179,9 +1155,6 @@ MF get_line_data (MF const& mf, int dir, IntVect const& cell, Box const& bnd_bx)
         DistributionMapping rdm(std::move(procmap));
         MF rmf(rba, rdm, mf.nComp(), IntVect(0),
                MFInfo().SetArena(mf.arena()));
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(rmf); mfi.isValid(); ++mfi) {
             Box const& b = mfi.validbox();
             auto const& dfab = rmf.array(mfi);
@@ -1208,20 +1181,11 @@ void reduce_to_plane (Array4<T> const& ar, int direction, Box const& bx, int box
             const auto len = amrex::length(bx);
             constexpr int nthreads = 128;
             auto nblocks = static_cast<int>(b2d.numPts());
-#ifdef AMREX_USE_SYCL
-            constexpr std::size_t shared_mem_bytes = sizeof(T)*Gpu::Device::warp_size;
-            amrex::launch<nthreads>(nblocks, shared_mem_bytes, Gpu::gpuStream(),
-                                    [=] AMREX_GPU_DEVICE (Gpu::Handler const& h)
-            {
-                int bid = h.blockIdx();
-                int tid = h.threadIdx();
-#else
             amrex::launch<nthreads>(nblocks, Gpu::gpuStream(),
                                     [=] AMREX_GPU_DEVICE ()
             {
                 int bid = blockIdx.x;
                 int tid = threadIdx.x;
-#endif
                 T tmp;
                 Op().init(tmp);
                 T* p;
@@ -1253,11 +1217,7 @@ void reduce_to_plane (Array4<T> const& ar, int direction, Box const& bx, int box
                     }
                     p = ar.ptr(i,j,0);
                 }
-#ifdef AMREX_USE_SYCL
-                Op().template parallel_update<T>(*p, tmp, h);
-#else
                 Op().template parallel_update<T,nthreads>(*p, tmp);
-#endif
             });
 #else
             // CPU

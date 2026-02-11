@@ -25,9 +25,6 @@
 #include <AMReX_ParmParse.H>
 #endif
 
-#ifdef AMREX_USE_OMP
-#include <omp.h>
-#endif
 
 #include <cstdio>
 #include <cstddef>
@@ -1549,26 +1546,6 @@ Initialize ()
 #elif defined(MPICH) && defined(MPIX_GPU_SUPPORT_CUDA)
     int is_supported = 0;
     if (MPIX_GPU_query_support(MPIX_GPU_SUPPORT_CUDA, &is_supported) == MPI_SUCCESS) {
-        use_gpu_aware_mpi = (bool) is_supported;
-    }
-#endif
-
-#elif defined(AMREX_USE_HIP)
-
-#if defined(OMPI_HAVE_MPI_EXT_ROCM) && OMPI_HAVE_MPI_EXT_ROCM
-    use_gpu_aware_mpi = (bool) MPIX_Query_rocm_support();
-#elif defined(MPICH) && defined(MPIX_GPU_SUPPORT_HIP)
-    int is_supported = 0;
-    if (MPIX_GPU_query_support(MPIX_GPU_SUPPORT_HIP, &is_supported) == MPI_SUCCESS) {
-        use_gpu_aware_mpi = (bool) is_supported;
-    }
-#endif
-
-#elif defined(AMREX_USE_SYCL)
-
-#if defined(MPICH) && defined(MPIX_GPU_SUPPORT_ZE)
-    int is_supported = 0;
-    if (MPIX_GPU_query_support(MPIX_GPU_SUPPORT_ZE, &is_supported) == MPI_SUCCESS) {
         use_gpu_aware_mpi = (bool) is_supported;
     }
 #endif

@@ -355,9 +355,6 @@ Real OpenBCSolver::solve (const Vector<MultiFab*>& a_sol,
     BL_PROFILE_VAR_STOP(blp_mg2);
 
     if (sol_all[0].nGrowVect() != a_sol[0]->nGrowVect()) {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(*a_sol[0], TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             Box const& bx = mfi.tilebox();
@@ -398,11 +395,6 @@ void OpenBCSolver::compute_moments (Gpu::DeviceVector<openbc::Moments>& moments)
         int const* pnblks = m_ngpublocks_d.data();
         std::size_t shared_mem_bytes = m_nthreads_momtag * sizeof(openbc::Moments::array_type);
 
-#ifdef AMREX_USE_SYCL
-        amrex::ignore_unused(problo,probhi,dx,crse_ratio,ntags,pm,ptag,pnblks,
-                             shared_mem_bytes);
-        amrex::Abort("xxxx SYCL todo: openbc compute_moments");
-#else
         amrex::launch(m_ngpublocks_h.back(), m_nthreads_momtag, shared_mem_bytes, Gpu::gpuStream(),
         [=] AMREX_GPU_DEVICE () noexcept
         {
@@ -531,7 +523,6 @@ void OpenBCSolver::compute_moments (Gpu::DeviceVector<openbc::Moments>& moments)
                 }
             }
         });
-#endif
     }
 #else
     for (auto const& tag : m_momtags_h) {
@@ -740,11 +731,6 @@ void OpenBCSolver::compute_potential (Gpu::DeviceVector<openbc::Moments> const& 
         const auto len = amrex::length(b);
         const auto lenxy = len.x*len.y;
         const auto lenx = len.x;
-#ifdef AMREX_USE_SYCL
-        amrex::ignore_unused(problo,dx,crse_ratio,nblocks,pmom,b,phi_arr,lo,
-                             lenxy,lenx);
-        amrex::Abort("xxxxx SYCL todo: openbc compute_potential");
-#else
         amrex::launch<AMREX_GPU_MAX_THREADS>(b.numPts(), Gpu::gpuStream(),
         [=] AMREX_GPU_DEVICE () noexcept
         {
@@ -767,7 +753,6 @@ void OpenBCSolver::compute_potential (Gpu::DeviceVector<openbc::Moments> const& 
                 phi_arr(i,j,k) = phitot;
             }
         });
-#endif
 #else
         amrex::LoopOnCpu(b, [&] (int i, int j, int k) noexcept
         {

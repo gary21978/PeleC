@@ -103,15 +103,7 @@ namespace amrex {
             static_assert(std::is_same_v<T_SIMD, uint64_t>, "make_invalid: forgot template on wrapper?");
             if (mask) { make_invalid(idcpu); }
         } else {
-#ifdef AMREX_USE_SIMD
-            // SIMD
-            static_assert(!std::is_same_v<T_SIMD, uint64_t>, "make_invalid: forgot template on wrapper?");
-            // cvt / .__cvt() because of: https://github.com/VcDevel/std-simd/issues/41#issuecomment-3185164952
-            // see also https://github.com/mattkretz/vir-simd/issues/45
-            simd::stdx::where(simd::stdx::cvt(mask), idcpu) &= ~(T_SIMD{1} << 63);
-#else
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(false, "make_invalid: AMReX_SIMD was not enabled!");
-#endif
         }
     }
 
@@ -130,15 +122,7 @@ namespace amrex {
             static_assert(std::is_same_v<T_SIMD, uint64_t>, "make_valid: forgot template on wrapper?");
             if (mask) { make_valid(idcpu); }
         } else {
-#ifdef AMREX_USE_SIMD
-            // SIMD
-            static_assert(!std::is_same_v<T_SIMD, uint64_t>, "make_valid: forgot template on wrapper?");
-            // cvt / .__cvt() because of: https://github.com/VcDevel/std-simd/issues/41#issuecomment-3185164952
-            // see also https://github.com/mattkretz/vir-simd/issues/45
-            simd::stdx::where(simd::stdx::cvt(mask), idcpu) |= T_SIMD{1} << 63;
-#else
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(false, "make_valid: AMReX_SIMD was not enabled!");
-#endif
         }
     }
 
@@ -434,7 +418,6 @@ struct alignas(sizeof(double)) Particle
         ParticleIDWrapper wrapper(tmp);
         wrapper = id;
 #if defined(AMREX_USE_OMP)
-#pragma omp atomic write
         this->m_idcpu = *(wrapper.m_idata);
 #else
         auto *old_ptr = reinterpret_cast<unsigned long long*>(&(this->m_idcpu));
@@ -604,9 +587,7 @@ Particle<NReal, NInt>::NextID ()
 // we should be able to test on _OPENMP < 201107 for capture (version 3.1)
 // but we must work around a bug in gcc < 4.9
 #if defined(AMREX_USE_OMP) && defined(_OPENMP) && _OPENMP < 201307
-#pragma omp critical (amrex_particle_nextid)
 #elif defined(AMREX_USE_OMP)
-#pragma omp atomic capture
 #endif
     next = the_next_id++;
 

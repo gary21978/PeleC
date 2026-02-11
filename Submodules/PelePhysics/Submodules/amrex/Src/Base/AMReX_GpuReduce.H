@@ -19,8 +19,6 @@
 #if defined(CCCL_MAJOR_VERSION) && (CCCL_MAJOR_VERSION >= 3)
 #define AMREX_CUDA_CCCL_VER_GE_3 1
 #endif
-#elif defined(AMREX_USE_HIP)
-#include <rocprim/rocprim.hpp>
 #endif
 
 //
@@ -52,206 +50,7 @@ namespace amrex::Gpu {
 
 namespace amrex::Gpu {
 
-#ifdef AMREX_USE_SYCL
-
-template <int warpSize, typename T, typename F>
-struct warpReduce
-{
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-    T operator() (T x, sycl::sub_group const& sg) const noexcept
-    {
-        for (int offset = warpSize/2; offset > 0; offset /= 2) {
-            T y = sycl::shift_group_left(sg, x, offset);
-            x = F()(x,y);
-        }
-        return x;
-    }
-};
-
-template <int warpSize, typename T, typename WARPREDUCE>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-T blockReduce (T x, WARPREDUCE && warp_reduce, T x0, Gpu::Handler const& h)
-{
-    T* shared = (T*)h.local;
-    int tid = h.item->get_local_id(0);
-    sycl::sub_group const& sg = h.item->get_sub_group();
-    int lane = sg.get_local_id()[0];
-    int wid = sg.get_group_id()[0];
-    int numwarps = sg.get_group_range()[0];
-    x = warp_reduce(x, sg);
-    // __syncthreads() prior to writing to shared memory is necessary
-    // if this reduction call is occurring multiple times in a kernel,
-    // and since we don't know how many times the user is calling it,
-    // we do it always to be safe.
-    h.item->barrier(sycl::access::fence_space::local_space);
-    if (lane == 0) { shared[wid] = x; }
-    h.item->barrier(sycl::access::fence_space::local_space);
-    bool b = (tid == 0) || (tid < numwarps);
-    x =  b ? shared[lane] : x0;
-    if (wid == 0) { x = warp_reduce(x, sg); }
-    return x;
-}
-
-template <int warpSize, typename T, typename WARPREDUCE, typename ATOMICOP>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void blockReduce_partial (T* dest, T x, WARPREDUCE && warp_reduce, ATOMICOP && atomic_op,
-                          Gpu::Handler const& handler)
-{
-   sycl::sub_group const& sg = handler.item->get_sub_group();
-   int wid = sg.get_group_id()[0];
-   if ((wid+1)*warpSize <= handler.numActiveThreads) {
-       x = warp_reduce(x, sg); // full warp
-       if (sg.get_local_id()[0] == 0) { atomic_op(dest, x); }
-   } else {
-       atomic_op(dest, x);
-   }
-}
-
-// block-wide reduction for thread0
-template <typename T>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-T blockReduceSum (T source, Gpu::Handler const& h) noexcept
-{
-    return Gpu::blockReduce<Gpu::Device::warp_size>
-        (source, Gpu::warpReduce<Gpu::Device::warp_size,T,amrex::Plus<T> >(), (T)0, h);
-}
-
-template <typename T>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceSum_full (T * dest, T source, Gpu::Handler const& h) noexcept
-{
-    T aggregate = blockReduceSum(source, h);
-    if (h.item->get_local_id(0) == 0) { Gpu::Atomic::AddNoRet(dest, aggregate); }
-}
-
-// block-wide reduction for thread0
-template <typename T>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-T blockReduceMin (T source, Gpu::Handler const& h) noexcept
-{
-    return Gpu::blockReduce<Gpu::Device::warp_size>
-        (source, Gpu::warpReduce<Gpu::Device::warp_size,T,amrex::Minimum<T> >(), source, h);
-}
-
-template <typename T>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceMin_full (T * dest, T source, Gpu::Handler const& h) noexcept
-{
-    T aggregate = blockReduceMin(source, h);
-    if (h.item->get_local_id(0) == 0) { Gpu::Atomic::Min(dest, aggregate); }
-}
-
-// block-wide reduction for thread0
-template <typename T>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-T blockReduceMax (T source, Gpu::Handler const& h) noexcept
-{
-    return Gpu::blockReduce<Gpu::Device::warp_size>
-        (source, Gpu::warpReduce<Gpu::Device::warp_size,T,amrex::Maximum<T> >(), source, h);
-}
-
-template <typename T>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceMax_full (T * dest, T source, Gpu::Handler const& h) noexcept
-{
-    T aggregate = blockReduceMax(source, h);
-    if (h.item->get_local_id(0) == 0) { Gpu::Atomic::Max(dest, aggregate); }
-}
-
-// block-wide reduction for thread0
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-int blockReduceLogicalAnd (int source, Gpu::Handler const& h) noexcept
-{
-    return Gpu::blockReduce<Gpu::Device::warp_size>
-        (source, Gpu::warpReduce<Gpu::Device::warp_size,int,amrex::LogicalAnd<int> >(), 1, h);
-}
-
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceLogicalAnd_full (int * dest, int source, Gpu::Handler const& h) noexcept
-{
-    int aggregate = blockReduceLogicalAnd(source, h);
-    if (h.item->get_local_id(0) == 0) { Gpu::Atomic::LogicalAnd(dest, aggregate); }
-}
-
-// block-wide reduction for thread0
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-int blockReduceLogicalOr (int source, Gpu::Handler const& h) noexcept
-{
-    return Gpu::blockReduce<Gpu::Device::warp_size>
-        (source, Gpu::warpReduce<Gpu::Device::warp_size,int,amrex::LogicalOr<int> >(), 0, h);
-}
-
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceLogicalOr_full (int * dest, int source, Gpu::Handler const& h) noexcept
-{
-    int aggregate = blockReduceLogicalOr(source, h);
-    if (h.item->get_local_id(0) == 0) { Gpu::Atomic::LogicalOr(dest, aggregate); }
-}
-
-template <typename T>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceSum (T * dest, T source, Gpu::Handler const& h) noexcept
-{
-    if (h.isFullBlock()) {
-        deviceReduceSum_full(dest, source, h);
-    } else {
-        Gpu::blockReduce_partial<Gpu::Device::warp_size>
-            (dest, source, Gpu::warpReduce<Gpu::Device::warp_size,T,amrex::Plus<T> >(),
-             Gpu::AtomicAdd<T>(), h);
-    }
-}
-
-template <typename T>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceMin (T * dest, T source, Gpu::Handler const& h) noexcept
-{
-    if (h.isFullBlock()) {
-        deviceReduceMin_full(dest, source, h);
-    } else {
-        Gpu::blockReduce_partial<Gpu::Device::warp_size>
-            (dest, source, Gpu::warpReduce<Gpu::Device::warp_size,T,amrex::Minimum<T> >(),
-             Gpu::AtomicMin<T>(), h);
-    }
-}
-
-template <typename T>
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceMax (T * dest, T source, Gpu::Handler const& h) noexcept
-{
-    if (h.isFullBlock()) {
-        deviceReduceMax_full(dest, source, h);
-    } else {
-        Gpu::blockReduce_partial<Gpu::Device::warp_size>
-            (dest, source, Gpu::warpReduce<Gpu::Device::warp_size,T,amrex::Maximum<T> >(),
-             Gpu::AtomicMax<T>(), h);
-    }
-}
-
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceLogicalAnd (int * dest, int source, Gpu::Handler const& h) noexcept
-{
-    if (h.isFullBlock()) {
-        deviceReduceLogicalAnd_full(dest, source, h);
-    } else {
-        Gpu::blockReduce_partial<Gpu::Device::warp_size>
-            (dest, source, Gpu::warpReduce<Gpu::Device::warp_size,int,amrex::LogicalAnd<int> >(),
-             Gpu::AtomicLogicalAnd<int>(), h);
-    }
-}
-
-AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-void deviceReduceLogicalOr (int * dest, int source, Gpu::Handler const& h) noexcept
-{
-    if (h.isFullBlock()) {
-        deviceReduceLogicalOr_full(dest, source, h);
-    } else {
-        Gpu::blockReduce_partial<Gpu::Device::warp_size>
-            (dest, source, Gpu::warpReduce<Gpu::Device::warp_size,int,amrex::LogicalOr<int> >(),
-             Gpu::AtomicLogicalOr<int>(), h);
-    }
-}
-
-#elif defined(AMREX_USE_CUDA) || defined(AMREX_USE_HIP)
+#if defined(AMREX_USE_CUDA)
 
 namespace detail {
 
@@ -259,8 +58,7 @@ template <typename T>
 AMREX_GPU_DEVICE AMREX_FORCE_INLINE
 T shuffle_down (T x, int offset) noexcept
 {
-    return AMREX_HIP_OR_CUDA(__shfl_down(x, offset),
-                             __shfl_down_sync(0xffffffff, x, offset));
+    return __shfl_down_sync(0xffffffff, x, offset);
 }
 
 // If other sizeof is needed, we can implement it later.
@@ -373,12 +171,6 @@ T blockReduceSum (T source) noexcept
     // we do it always to be safe.
     __syncthreads();
     return BlockReduce(temp_storage).Sum(source);
-#elif defined(AMREX_USE_HIP)
-    using BlockReduce = rocprim::block_reduce<T,BLOCKDIMX>;
-    __shared__ typename BlockReduce::storage_type temp_storage;
-    __syncthreads();
-    BlockReduce().reduce(source, source, temp_storage, rocprim::plus<T>());
-    return source;
 #else
     return blockReduceSum(source);
 #endif
@@ -428,12 +220,6 @@ T blockReduceMin (T source) noexcept
 #else
     return BlockReduce(temp_storage).Reduce(source, cub::Min());
 #endif
-#elif defined(AMREX_USE_HIP)
-    using BlockReduce = rocprim::block_reduce<T,BLOCKDIMX>;
-    __shared__ typename BlockReduce::storage_type temp_storage;
-    __syncthreads();
-    BlockReduce().reduce(source, source, temp_storage, rocprim::minimum<T>());
-    return source;
 #else
     return blockReduceMin(source);
 #endif
@@ -482,12 +268,6 @@ T blockReduceMax (T source) noexcept
 #else
     return BlockReduce(temp_storage).Reduce(source, cub::Max());
 #endif
-#elif defined(AMREX_USE_HIP)
-    using BlockReduce = rocprim::block_reduce<T,BLOCKDIMX>;
-    __shared__ typename BlockReduce::storage_type temp_storage;
-    __syncthreads();
-    BlockReduce().reduce(source, source, temp_storage, rocprim::maximum<T>());
-    return source;
 #else
     return blockReduceMax(source);
 #endif
@@ -532,12 +312,6 @@ int blockReduceLogicalAnd (int source) noexcept
     // we do it always to be safe.
     __syncthreads();
     return BlockReduce(temp_storage).Reduce(source, amrex::LogicalAnd<int>());
-#elif defined(AMREX_USE_HIP)
-    using BlockReduce = rocprim::block_reduce<int,BLOCKDIMX>;
-    __shared__ typename BlockReduce::storage_type temp_storage;
-    __syncthreads();
-    BlockReduce().reduce(source, source, temp_storage, amrex::LogicalAnd<int>());
-    return source;
 #else
     return blockReduceLogicalAnd(source);
 #endif
@@ -580,12 +354,6 @@ int blockReduceLogicalOr (int source) noexcept
     // we do it always to be safe.
     __syncthreads();
     return BlockReduce(temp_storage).Reduce(source, amrex::LogicalOr<int>());
-#elif defined(AMREX_USE_HIP)
-    using BlockReduce = rocprim::block_reduce<int,BLOCKDIMX>;
-    __shared__ typename BlockReduce::storage_type temp_storage;
-    __syncthreads();
-    BlockReduce().reduce(source, source, temp_storage, amrex::LogicalOr<int>());
-    return source;
 #else
     return blockReduceLogicalOr(source);
 #endif
@@ -700,9 +468,6 @@ template <typename T>
 AMREX_FORCE_INLINE
 void deviceReduceSum_full (T * dest, T source) noexcept
 {
-#ifdef AMREX_USE_OMP
-#pragma omp atomic
-#endif
     *dest += source;
 }
 
@@ -717,9 +482,6 @@ template <typename T>
 AMREX_FORCE_INLINE
 void deviceReduceMin_full (T * dest, T source) noexcept
 {
-#ifdef AMREX_USE_OMP
-#pragma omp critical (gpureduce_reducemin)
-#endif
     *dest = std::min(*dest, source);
 }
 
@@ -734,9 +496,6 @@ template <typename T>
 AMREX_FORCE_INLINE
 void deviceReduceMax_full (T * dest, T source) noexcept
 {
-#ifdef AMREX_USE_OMP
-#pragma omp critical (gpureduce_reducemax)
-#endif
     *dest = std::max(*dest, source);
 }
 
@@ -750,9 +509,6 @@ void deviceReduceMax (T * dest, T source, Gpu::Handler const&) noexcept
 AMREX_FORCE_INLINE
 void deviceReduceLogicalAnd_full (int * dest, int source) noexcept
 {
-#ifdef AMREX_USE_OMP
-#pragma omp critical (gpureduce_reduceand)
-#endif
     *dest = (*dest) && source;
 }
 
@@ -765,9 +521,6 @@ void deviceReduceLogicalAnd (int * dest, int source, Gpu::Handler const&) noexce
 AMREX_FORCE_INLINE
 void deviceReduceLogicalOr_full (int * dest, int source) noexcept
 {
-#ifdef AMREX_USE_OMP
-#pragma omp critical (gpureduce_reduceor)
-#endif
     *dest = (*dest) || source;
 }
 

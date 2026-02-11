@@ -169,11 +169,6 @@ HypreMLABecLap::~HypreMLABecLap ()
     HYPRE_SStructGridDestroy(m_ss_grid);
     HYPRE_SStructStencilDestroy(m_ss_stencil);
     HYPRE_SStructGraphDestroy(m_ss_graph);
-#if 0
-    if (m_ss_precond) {
-        HYPRE_SStructSolverDestroy(m_ss_precond);
-    }
-#endif
     HYPRE_SStructMatrixDestroy(m_ss_A);
     if (m_ss_x) {
         HYPRE_SStructVectorDestroy(m_ss_x);
@@ -1149,9 +1144,6 @@ void HypreMLABecLap::commBCoefs (int flev, Array<MultiFab const*,AMREX_SPACEDIM>
         rrface[idim] = 1;
         int const nfaces = AMREX_D_TERM(rrface[0],*rrface[1],*rrface[2]);
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
         for (MFIter mfi(offset_bcoefs[idim]); mfi.isValid(); ++mfi) {
             auto const& offset_a = offset_bcoefs[idim].array(mfi);
             auto const& fmask_a = m_fine_masks[clev].const_array(mfi);
@@ -1318,7 +1310,6 @@ void HypreMLABecLap::commBCoefs (int flev, Array<MultiFab const*,AMREX_SPACEDIM>
 #endif
 
 #if defined(AMREX_USE_OMP) && !defined(AMREX_USE_GPU)
-#pragma omp parallel for
 #endif
         for (int isend = 0; isend < N_snds; ++isend) {
             char* dptr = comm_data.data[isend];
@@ -1371,7 +1362,6 @@ void HypreMLABecLap::commBCoefs (int flev, Array<MultiFab const*,AMREX_SPACEDIM>
 #endif
 
 #if defined(AMREX_USE_OMP) && !defined(AMREX_USE_GPU)
-#pragma omp parallel for
 #endif
         for (int irecv = 0; irecv < N_rcvs; ++irecv) {
             char const* dptr = comm_data.data[irecv];
@@ -1454,7 +1444,6 @@ void HypreMLABecLap::commBCoefs_local (int flev,
 #endif
 
 #if defined(AMREX_USE_OMP) && !defined(AMREX_USE_GPU)
-#pragma omp parallel for
 #endif
     for (int itag = 0; itag < int(tags.size()); ++itag) { // NOLINT(modernize-loop-convert)
         auto const& tag = tags[itag];

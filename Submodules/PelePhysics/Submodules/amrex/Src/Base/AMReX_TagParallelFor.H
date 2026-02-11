@@ -355,30 +355,16 @@ ParallelFor_doit (TagVector<TagType> const& tv, F const& f)
     constexpr auto nthreads = TagVector<TagType>::nthreads;
 
     amrex::launch<nthreads>(tv.nblocks, Gpu::gpuStream(),
-#ifdef AMREX_USE_SYCL
-    [=] AMREX_GPU_DEVICE (sycl::nd_item<1> const& item) noexcept
-    [[sycl::reqd_work_group_size(nthreads)]]
-    [[sycl::reqd_sub_group_size(Gpu::Device::warp_size)]]
-#else
     [=] AMREX_GPU_DEVICE () noexcept
-#endif
     {
-#ifdef AMREX_USE_SYCL
-        std::size_t g_tid = item.get_global_id(0);
-#else
         auto g_tid = std::size_t(blockDim.x)*blockIdx.x + threadIdx.x;
-#endif
         auto g_wid = int(g_tid / Gpu::Device::warp_size);
         if (g_wid >= ntotwarps) { return; }
 
         int tag_id = amrex::bisect(d_nwarps, 0, ntags, g_wid);
 
         int b_wid = g_wid - d_nwarps[tag_id]; // b_wid'th warp on this box
-#ifdef AMREX_USE_SYCL
-        int lane = item.get_local_id(0) % Gpu::Device::warp_size;
-#else
         int lane = threadIdx.x % Gpu::Device::warp_size;
-#endif
         int icell = b_wid*Gpu::Device::warp_size + lane;
 
         tagparfor_call_f(icell, d_tags[tag_id], f);
@@ -403,9 +389,6 @@ ParallelFor_doit (TagVector<TagType> const& tv, F const& f)
     const auto d_tags = tv.d_tags;
     const auto ntags = tv.ntags;
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
     for (int itag = 0; itag < ntags; ++itag) {
 
         const auto& t = d_tags[itag];
@@ -416,7 +399,6 @@ ParallelFor_doit (TagVector<TagType> const& tv, F const& f)
 
             for (int k = lo.z; k <= hi.z; ++k) {
                 for (int j = lo.y; j <= hi.y; ++j) {
-                    AMREX_PRAGMA_SIMD
                     for (int i = lo.x; i <= hi.x; ++i) {
                         f(0, 1, i, j, k, t);
                     }
@@ -425,7 +407,6 @@ ParallelFor_doit (TagVector<TagType> const& tv, F const& f)
         } else {
             const auto size = t.size();
 
-            AMREX_PRAGMA_SIMD
             for (int i = 0; i < size; ++i) {
                 f(i, size, t);
             }

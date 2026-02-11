@@ -165,9 +165,6 @@ MLTensorOp::prepareForSolve ()
             if (m_has_kappa && m_overset_mask[amrlev][mglev]) {
                 const Real fac = static_cast<Real>(1 << mglev); // 2**mglev
                 const Real osfac = Real(2.0)*fac/(fac+Real(1.0));
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
                 for (MFIter mfi(m_kappa[amrlev][mglev][0],TilingIfNotGPU()); mfi.isValid(); ++mfi)
                 {
                     AMREX_D_TERM(Box const& xbx = mfi.nodaltilebox(0);,
@@ -224,9 +221,6 @@ MLTensorOp::apply (int amrlev, int mglev, MultiFab& out, MultiFab& in, BCMode bc
     Array<MultiFab,AMREX_SPACEDIM> const& kapmf = m_kappa[amrlev][mglev];
     Real bscalar = m_b_scalar;
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     {
         FArrayBox fluxfab_tmp[AMREX_SPACEDIM];
         for (MFIter mfi(out, TilingIfNotGPU()); mfi.isValid(); ++mfi)
@@ -351,9 +345,6 @@ MLTensorOp::applyBCTensor (int amrlev, int mglev, MultiFab& vel, // NOLINT(reada
 
     MFItInfo mfi_info;
     if (Gpu::notInLaunchRegion()) { mfi_info.SetDynamic(true); }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (MFIter mfi(vel, mfi_info); mfi.isValid(); ++mfi)
     {
         const Box& vbx = mfi.validbox();
@@ -409,19 +400,11 @@ MLTensorOp::applyBCTensor (int amrlev, int mglev, MultiFab& vel, // NOLINT(reada
 #ifdef AMREX_USE_GPU
         if (Gpu::inLaunchRegion()) {
             amrex::launch<64>(12, Gpu::gpuStream(),
-#ifdef AMREX_USE_SYCL
-            [=] AMREX_GPU_DEVICE (sycl::nd_item<1> const& item)
-            {
-                int bid = item.get_group_linear_id();
-                int tid = item.get_local_linear_id();
-                int bdim = item.get_local_range(0);
-#else
             [=] AMREX_GPU_DEVICE ()
             {
                 int bid = blockIdx.x;
                 int tid = threadIdx.x;
                 int bdim = blockDim.x;
-#endif
                 mltensor_fill_edges(bid, tid, bdim, vbx, velfab,
                                     mxlo, mylo, mzlo, mxhi, myhi, mzhi,
                                     bvxlo, bvylo, bvzlo, bvxhi, bvyhi, bvzhi,

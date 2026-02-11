@@ -10,9 +10,6 @@ template <typename F, typename MF>
 auto call_interp_hook (F const& f, MF& mf, int icomp, int ncomp)
     -> decltype(f(mf[0],Box(),icomp,ncomp))
 {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (MFIter mfi(mf); mfi.isValid(); ++mfi) {
         auto& dfab = mf[mfi];
         const Box& dbx = dfab.box();
@@ -128,9 +125,6 @@ FillPatchSingleLevel (MF& mf, IntVect const& nghost, Real time,
                     interp_ghost.min(nghost);
                 }
             }
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
             for (MFIter mfi(*dmf,TilingIfNotGPU()); mfi.isValid(); ++mfi)
             {
                 const Box& bx = mfi.growntilebox(interp_ghost);
@@ -208,9 +202,6 @@ FillPatchInterp (MF& mf_fine_patch, int fcomp, MF const& mf_crse_patch, int ccom
 
     Box const& cdomain = amrex::convert(cgeom.Domain(), mf_fine_patch.ixType());
     int idummy=0;
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     {
         Vector<BCRec> bcr(ncomp);
         for (MFIter mfi(mf_fine_patch); mfi.isValid(); ++mfi)
@@ -719,11 +710,6 @@ namespace detail {
                 }
 
                 int idummy=0;
-#ifdef AMREX_USE_OMP
-//              bool cc = fpc.ba_crse_patch.ixType().cellCentered();
-                bool cc = false;        // can anything be done to allow threading, or can the OpenMP just be removed?
-#pragma omp parallel if (cc && Gpu::notInLaunchRegion() )
-#endif
                 {
                     Vector<Array<BCRec, AMREX_SPACEDIM> > bcr(ncomp);
                     for (MFIter mfi(mf_refined_patch[0]); mfi.isValid(); ++mfi)
@@ -1125,9 +1111,6 @@ InterpFromCoarseLevel (MF& mf, IntVect const& nghost, Real time,
     FillPatchInterp(mf, dcomp, mf_crse_patch, 0, ncomp, nghost, cgeom, fgeom, fdomain_g,
                     ratio, mapper, bcs, bcscomp);
 
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     for (MFIter mfi(mf); mfi.isValid(); ++mfi)
     {
         FAB& dfab   = mf[mfi];
@@ -1238,9 +1221,6 @@ InterpFromCoarseLevel (Array<MF*, AMREX_SPACEDIM> const& mf, IntVect const& ngho
     }
 
     int idummy1=0, idummy2=0;
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
     {
         Vector<Array<BCRec, AMREX_SPACEDIM> > bcr(ncomp);
 

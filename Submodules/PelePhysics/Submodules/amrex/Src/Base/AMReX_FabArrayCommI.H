@@ -456,13 +456,9 @@ FabArray<FAB>::ParallelCopy_nowait (const FabArray<FAB>& src,
                 {
                     auto const& lo = amrex::lbound(box);
                     auto const& hi = amrex::ubound(box);
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for collapse(3)
-#endif
                     for (int n = 0; n < ncomp; ++n) {
                     for (int k = lo.z; k <= hi.z; ++k) {
                     for (int j = lo.y; j <= hi.y; ++j) {
-                    AMREX_PRAGMA_SIMD
                     for (int i = lo.x; i <= hi.x; ++i) {
                         da(i,j,k,n) = sa(i,j,k,n);
                     }}}}
@@ -482,13 +478,9 @@ FabArray<FAB>::ParallelCopy_nowait (const FabArray<FAB>& src,
                 {
                     auto const& lo = amrex::lbound(box);
                     auto const& hi = amrex::ubound(box);
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for collapse(3)
-#endif
                     for (int n = 0; n < ncomp; ++n) {
                     for (int k = lo.z; k <= hi.z; ++k) {
                     for (int j = lo.y; j <= hi.y; ++j) {
-                    AMREX_PRAGMA_SIMD
                     for (int i = lo.x; i <= hi.x; ++i) {
                         da(i,j,k,n) += sa(i,j,k,n);
                     }}}}
@@ -1027,9 +1019,6 @@ void fbv_copy (Vector<TagT> const& tags)
     } else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel for
-#endif
         for (int itag = 0; itag < N; ++itag) {
             auto const& tag = tags[itag];
             const int ncomp = tag.dfab.nComp();

@@ -16,7 +16,6 @@ set(PELE_DIM "3" CACHE STRING "Number of physical dimensions, 2 or 3")
 option(PELE_ENABLE_PARTICLES "Enable particles in AMReX library and enables spray" ON)
 option(PELE_ENABLE_CLANG_TIDY "Enable clang-tidy analysis" OFF)
 option(PELE_ENABLE_CPPCHECK "Enable cppcheck analysis" OFF)
-option(PELE_ENABLE_MASA "Enable tests that require MASA" OFF)
 option(PELE_ENABLE_FCOMPARE "Enable building fcompare when not testing" OFF)
 option(PELE_ENABLE_FCOMPARE_FOR_TESTS "Check test plots against gold files" OFF)
 option(PELE_SAVE_GOLDS "Enable saving of gold files to a specified directory" OFF)
@@ -34,8 +33,6 @@ set(PELE_PRECISION "DOUBLE" CACHE STRING "Floating point precision SINGLE or DOU
 option(PELE_ENABLE_MPI "Enable MPI" OFF)
 option(PELE_ENABLE_OPENMP "Enable OpenMP" OFF)
 option(PELE_ENABLE_CUDA "Enable CUDA" OFF)
-option(PELE_ENABLE_HIP "Enable HIP" OFF)
-option(PELE_ENABLE_SYCL "Enable SyCL" OFF)
 
 #Options for C++
 set(CMAKE_CXX_STANDARD 17)
@@ -51,9 +48,6 @@ if(PELE_ENABLE_CUDA)
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS "10.0")
     message(FATAL_ERROR "Your nvcc version is ${CMAKE_CUDA_COMPILER_VERSION} which is unsupported."
       "Please use CUDA toolkit version 10.0 or newer.")
-  endif()
-  if(PELE_ENABLE_MASA)
-    message(FATAL_ERROR "MASA enabled with CUDA is unsupported.")
   endif()
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES 70)
@@ -91,16 +85,6 @@ include(SetSundialsOptions)
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(${SUNDIALS_SUBMOD_LOCATION})
 
-########################### MASA #####################################
-
-if(PELE_ENABLE_MASA)
-  message(STATUS "MASA Configure Section")
-  find_package(MASA QUIET REQUIRED)
-  if(MASA_FOUND)
-    message(STATUS "Found MASA = ${MASA_DIR}")
-  endif()
-endif()
-
 ########################### PeleC #####################################
 
 if(PELE_ENABLE_MPI)
@@ -115,9 +99,6 @@ message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message(STATUS "PELE_PRECISION = ${PELE_PRECISION}")
-if("${PELE_PRECISION}" STREQUAL "SINGLE" AND PELE_ENABLE_MASA)
-  message(FATAL_ERROR "Single precision currently not allowed in AMReX with MASA enabled.")
-endif()
 
 init_code_checks()
 
