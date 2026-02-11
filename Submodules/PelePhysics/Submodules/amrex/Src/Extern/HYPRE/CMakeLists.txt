@@ -19,7 +19,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        target_sources(amrex_${D}d
           PRIVATE
           AMReX_Habec_${D}D_K.H
-          AMReX_Habec_K.H
           )
 
     else ()
@@ -27,23 +26,13 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        target_sources(amrex_${D}d
           PRIVATE
           AMReX_HypreABecLap.cpp
-          AMReX_HypreABecLap.H
           AMReX_HypreABecLap2.cpp
-          AMReX_HypreABecLap2.H
           AMReX_HypreABecLap3.cpp
-          AMReX_HypreABecLap2.H
           AMReX_Hypre.cpp
-          AMReX_Hypre.H
           AMReX_Habec_${D}D_K.H
-          AMReX_Habec_K.H
           AMReX_HypreNodeLap.cpp
-          AMReX_HypreNodeLap.H
           AMReX_HypreIJIface.cpp
-          AMReX_HypreIJIface.H
-          AMReX_HypreSolver.H
-          AMReX_HypreMLABecLap.H
           AMReX_HypreMLABecLap.cpp
-          AMReX_HypreMLABecLap_K.H
           AMReX_HypreMLABecLap_${D}D_K.H
           )
 

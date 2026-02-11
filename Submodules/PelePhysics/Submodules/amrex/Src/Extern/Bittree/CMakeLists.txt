@@ -6,6 +6,5 @@ add_amrex_define(AMREX_USE_BITTREE NO_LEGACY)
 
 target_sources( amrex
    PRIVATE
-   AMReX_Bittree.H
    AMReX_Bittree.cpp
    )

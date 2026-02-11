@@ -10,7 +10,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_Sundials_Core.cpp
        AMReX_Sundials_Core.H
        AMReX_Sundials.H
-       AMReX_SundialsIntegrator.H
        AMReX_SUNMemory.cpp
        AMReX_SUNMemory.H
     )

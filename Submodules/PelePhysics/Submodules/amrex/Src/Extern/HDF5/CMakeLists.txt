@@ -7,7 +7,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        PRIVATE
        AMReX_PlotFileUtilHDF5.H
        AMReX_PlotFileUtilHDF5.cpp
-       AMReX_ParticleUtilHDF5.H
        AMReX_ParticleHDF5.H
        AMReX_ParticlesHDF5.H
        AMReX_WriteBinaryParticleDataHDF5.H

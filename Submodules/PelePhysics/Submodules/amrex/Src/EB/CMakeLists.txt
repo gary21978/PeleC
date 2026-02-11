@@ -15,8 +15,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_EBFabFactory.H
        AMReX_EBFabFactory.cpp
        AMReX_EBMultiFabUtil.H
-       AMReX_EBMultiFabUtil_C.H
-       AMReX_EBMultiFabUtil_${D}D_C.H
        AMReX_EBMultiFabUtil.cpp
        AMReX_EBCellFlag.H
        AMReX_EBCellFlag.cpp
@@ -45,11 +43,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_EB_StateRedistUtils.cpp
        AMReX_EB_StateRedistribute.cpp
        AMReX_EB_Redistribution.H
-       AMReX_EB_StateRedistSlopeLimiter_K.H
-       AMReX_EB_Slopes_${D}D_K.H
-       AMReX_EB_Slopes_K.H
-       AMReX_algoim.H
-       AMReX_algoim_K.H
        AMReX_algoim.cpp
        AMReX_EB2_IF_AllRegular.H
        AMReX_EB2_IF_Box.H
@@ -57,10 +50,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_EB2_IF_Ellipsoid.H
        AMReX_EB2_IF_Plane.H
        AMReX_EB2_IF_Sphere.H
-       AMReX_EB2_IF_Torus.H
-       AMReX_distFcnElement.H
-       AMReX_EB2_IF_Spline.H
-       AMReX_EB2_IF_Polynomial.H
        AMReX_EB2_IF_Complement.H
        AMReX_EB2_IF_Intersection.H
        AMReX_EB2_IF_Lathe.H
@@ -70,10 +59,7 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_EB2_IF_Union.H
        AMReX_EB2_IF_Extrusion.H
        AMReX_EB2_IF_Difference.H
-       AMReX_EB2_IF_Parser.H
-       AMReX_EB2_IF.H
        AMReX_EB2_IF_Base.H
-       AMReX_EB2_IF_DevicePtr.H
        AMReX_distFcnElement.cpp
        AMReX_EB2_GeometryShop.H
        AMReX_EB2.H
@@ -88,18 +74,11 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_EB2_ND_C.cpp
        AMReX_EB2_C.H
        AMReX_EB2_${D}D_C.H
-       AMReX_EB_STL_utils.H
        AMReX_EB_STL_utils.cpp
-       AMReX_EB_chkpt_file.H
        AMReX_EB_chkpt_file.cpp
-       AMReX_EB_triGeomOps_K.H
-       AMReX_EB2_Level_STL.H
        AMReX_EB2_Level_STL.cpp
-       AMReX_EB2_IndexSpace_STL.H
        AMReX_EB2_IndexSpace_STL.cpp
-       AMReX_EB2_Level_chkpt_file.H
        AMReX_EB2_Level_chkpt_file.cpp
-       AMReX_EB2_IndexSpace_chkpt_file.H
        AMReX_EB2_IndexSpace_chkpt_file.cpp
        )
 
@@ -107,8 +86,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        target_sources(amrex_${D}d
        PRIVATE
        AMReX_WriteEBSurface.cpp
-       AMReX_WriteEBSurface.H
-       AMReX_EBToPVD.H
        AMReX_EBToPVD.cpp
        )
     endif ()
@@ -116,8 +93,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
     if (AMReX_FORTRAN)
        target_sources(amrex_${D}d
           PRIVATE
-          AMReX_ebcellflag_mod.F90
-          AMReX_EBFluxRegister_nd.F90
           )
     endif ()
 endforeach()

@@ -15,10 +15,6 @@ add_amrex_define( AMREX_NO_SENSEI_AMR_INST IF AMReX_NO_SENSEI_AMR_INST NO_LEGACY
 #
 foreach(D IN LISTS AMReX_SPACEDIM)
     set ( amrex_sensei_sources
-       AMReX_AmrMeshDataAdaptor.H
-       AMReX_AmrMeshInSituBridge.H
-       AMReX_InSituBridge.H
-       AMReX_InSituUtils.H
        AMReX_AmrMeshDataAdaptor.cpp
        AMReX_AmrMeshInSituBridge.cpp
        AMReX_InSituBridge.cpp
@@ -26,8 +22,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
 
     if( AMReX_AMRLEVEL )
        list ( APPEND amrex_sensei_sources
-          AMReX_AmrDataAdaptor.H
-          AMReX_AmrInSituBridge.H
           AMReX_AmrDataAdaptor.cpp
           AMReX_AmrInSituBridge.cpp )
     endif()
@@ -37,18 +31,9 @@ foreach(D IN LISTS AMReX_SPACEDIM)
     #
     if ( AMReX_PARTICLES )
        list ( APPEND amrex_sensei_sources
-          AMReX_ParticleDataAdaptor.H
-          AMReX_ParticleDataAdaptorI.H
-          AMReX_ParticleInSituBridge.H
-          AMReX_AmrMeshParticleDataAdaptor.H
-          AMReX_AmrMeshParticleDataAdaptorI.H
-          AMReX_AmrMeshParticleInSituBridge.H )
 
        if( AMReX_AMRLEVEL )
           list ( APPEND amrex_sensei_sources
-             AMReX_AmrParticleDataAdaptor.H
-             AMReX_AmrParticleDataAdaptorI.H
-             AMReX_AmrParticleInSituBridge.H )
        endif()
     endif ()
 

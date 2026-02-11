@@ -8,17 +8,13 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_ccse-mpi.H
        AMReX_Math.H
        AMReX_Algorithm.H
-       AMReX_Any.H
        AMReX_Array.H
-       AMReX_BlockMutex.H
        AMReX_BlockMutex.cpp
        AMReX_Enum.H
        AMReX_GpuComplex.H
        AMReX_Order.H
-       AMReX_SmallMatrix.H
        AMReX_ConstexprFor.H
        AMReX_Vector.H
-       AMReX_TableData.H
        AMReX_Tuple.H
        AMReX_TypeList.H
        AMReX.cpp
@@ -44,8 +40,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_ValLocPair.H
        AMReX_Reduce.H
        AMReX_Scan.H
-       AMReX_Partition.H
-       AMReX_Morton.H
        AMReX_Random.H
        AMReX_RandomEngine.H
        AMReX_Random.cpp
@@ -53,7 +47,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_ArrayLim.H
        AMReX_REAL.H
        AMReX_INT.H
-       AMReX_CONSTANTS.H
        AMReX_SPACE.H
        AMReX_DistributionMapping.H
        AMReX_DistributionMapping.cpp
@@ -62,7 +55,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_OpenMP.H
        AMReX_OpenMP.cpp
        AMReX_ParallelReduce.H
-       AMReX_ForkJoin.H
        AMReX_ForkJoin.cpp
        AMReX_ParallelContext.H
        AMReX_ParallelContext.cpp
@@ -71,7 +63,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_VisMF.cpp
        AMReX_AsyncOut.H
        AMReX_AsyncOut.cpp
-       AMReX_BackgroundThread.H
        AMReX_BackgroundThread.cpp
        AMReX_Arena.H
        AMReX_Arena.cpp
@@ -79,18 +70,14 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_BArena.cpp
        AMReX_CArena.H
        AMReX_CArena.cpp
-       AMReX_PArena.H
        AMReX_PArena.cpp
-       AMReX_SArena.H
        AMReX_SArena.cpp
        AMReX_DataAllocator.H
        AMReX_BLProfiler.H
        AMReX_BLBackTrace.H
        AMReX_BLBackTrace.cpp
-       AMReX_BLFort.H
        AMReX_NFiles.H
        AMReX_NFiles.cpp
-       AMReX_parstream.H
        AMReX_parstream.cpp
        # I/O stuff  --------------------------------------------------------------
        AMReX_ANSIEscCode.H
@@ -103,7 +90,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_Print.H
        AMReX_IntConv.H
        AMReX_IntConv.cpp
-       AMReX_IOFormat.H
        # Index space -------------------------------------------------------------
        AMReX_Box.H
        AMReX_Box.cpp
@@ -141,7 +127,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_Array4.H
        AMReX_MakeType.H
        AMReX_TypeTraits.H
-       AMReX_FabDataType.H
        AMReX_FabFactory.H
        AMReX_BaseFabUtility.H
        # Fortran data defined on unions of rectangles ----------------------------
@@ -165,8 +150,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        # Geometry / Coordinate system routines -----------------------------------
        AMReX_CoordSys.cpp
        AMReX_CoordSys.H
-       AMReX_COORDSYS_${D}D_C.H
-       AMReX_COORDSYS_C.H
        AMReX_Geometry.cpp
        AMReX_Geometry.H
        AMReX_MultiFabUtil.cpp
@@ -181,7 +164,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_PhysBCFunct.cpp
        AMReX_PhysBCFunct.H
        AMReX_BCUtil.cpp
-       AMReX_BCUtil.H
        AMReX_BC_TYPES.H
        AMReX_FilCC_${D}D_C.H
        AMReX_FilCC_C.H
@@ -201,10 +183,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_PlotFileDataImpl.H
        AMReX_PlotFileDataImpl.cpp
        # Time Integration
-       AMReX_FEIntegrator.H
-       AMReX_IntegratorBase.H
-       AMReX_RKIntegrator.H
-       AMReX_TimeIntegrator.H
        AMReX_RungeKutta.H
        # GPU --------------------------------------------------------------------
        AMReX_Gpu.H
@@ -219,7 +197,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_GpuLaunch.nolint.H
        AMReX_GpuLaunchGlobal.H
        AMReX_GpuLaunchMacrosG.H
-       AMReX_GpuLaunchMacrosG.nolint.H
        AMReX_GpuLaunchMacrosC.H
        AMReX_GpuLaunchMacrosC.nolint.H
        AMReX_GpuLaunchFunctsG.H
@@ -250,7 +227,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        # CUDA --------------------------------------------------------------------
        AMReX_CudaGraph.H
        # Machine model -----------------------------------------------------------
-       AMReX_Machine.H
        AMReX_Machine.cpp
        # Memory pool -------------------------------------------------------------
        AMReX_MemPool.cpp
@@ -263,11 +239,7 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        Parser/AMReX_Parser_Y.cpp
        Parser/AMReX_Parser_Y.H
        Parser/amrex_parser.lex.cpp
-       Parser/amrex_parser.lex.nolint.H
-       Parser/amrex_parser.lex.h
        Parser/amrex_parser.tab.cpp
-       Parser/amrex_parser.tab.nolint.H
-       Parser/amrex_parser.tab.h
        Parser/AMReX_IParser.cpp
        Parser/AMReX_IParser.H
        Parser/AMReX_IParser_Exe.cpp
@@ -275,17 +247,10 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        Parser/AMReX_IParser_Y.cpp
        Parser/AMReX_IParser_Y.H
        Parser/amrex_iparser.lex.cpp
-       Parser/amrex_iparser.lex.nolint.H
-       Parser/amrex_iparser.lex.h
        Parser/amrex_iparser.tab.cpp
-       Parser/amrex_iparser.tab.nolint.H
-       Parser/amrex_iparser.tab.h
        # Dense linear algebra solver using LU decomposition
-       AMReX_LUSolver.H
        # AMReX Hydro -----------------------------------------------------
-       AMReX_Slopes_K.H
        # Forward declaration -----------------------------------------------------
-       AMReX_BaseFwd.H
        )
 
     # Profiling
@@ -302,21 +267,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
     if (AMReX_FORTRAN)
        target_sources(amrex_${D}d
           PRIVATE
-          AMReX_filcc_f.H
-          AMReX_BLutil_F.F90
-          AMReX_BLProfiler_F.F90
-          AMReX_filcc_mod.F90
-          AMReX_omp_mod.F90
-          AMReX_acc_mod.F90
-          AMReX_fort_mod.F90
-          AMReX_constants_mod.f90
-          AMReX_error_mod.F90
-          AMReX_parmparse_mod.F90
-          AMReX_string_mod.F90
-          AMReX_bc_types_mod.F90
-          AMReX_ParallelDescriptor_F.F90
-          AMReX_io_mod.F90
-          AMReX_mempool_mod.F90
           )
     endif ()
     # LAZY mode not supported in CMake yet

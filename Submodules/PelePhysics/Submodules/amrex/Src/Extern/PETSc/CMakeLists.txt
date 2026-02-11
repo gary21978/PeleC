@@ -12,6 +12,5 @@ foreach(D IN LISTS AMReX_SPACEDIM)
     target_sources(amrex_${D}d
        PRIVATE
        AMReX_PETSc.cpp
-       AMReX_PETSc.H
     )
 endforeach()
