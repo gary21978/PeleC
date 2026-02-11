@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import sys, re
 import argparse
@@ -74,6 +74,12 @@ def doit(defines, undefines, comp, allow_diff_comp):
         print("#endif")
 
     print("#endif") #  ifdef __cplusplus
+
+    # hipcc does not necessarily set the _OPENMP macro
+    # https://rocmdocs.amd.com/en/latest/Programming_Guides/HIP-FAQ.html?highlight=_openmp#openmp-is-undefined-when-compiling-with-fopenmp
+    print("#if defined(AMREX_USE_OMP) && !defined(_OPENMP) && !defined(AMREX_USE_HIP)")
+    print('#error libamrex was built with OpenMP')
+    print("#endif")
 
     print("#endif")
 

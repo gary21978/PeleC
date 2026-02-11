@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import re
 import argparse
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        doit(code=args.code, defines=args.defines)
+        #doit(code=args.code, defines=args.defines)
     except:
         # something went wrong
         print("$(error something went wrong in mkversionheader.py)")
