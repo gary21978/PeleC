@@ -131,7 +131,4 @@ generate_export_header(
   sundials_core BASE_NAME SUNDIALS EXPORT_FILE_NAME
   "${PROJECT_BINARY_DIR}/include/sundials/sundials_export.h")
 
-# Add F2003 module if the interface is enabled
-if(BUILD_FORTRAN_MODULE_INTERFACE)
-  add_subdirectory("fmod_int${SUNDIALS_INDEX_SIZE}")
-endif()
+# F2003 Fortran interface pruned
