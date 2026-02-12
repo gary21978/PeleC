@@ -17,37 +17,6 @@
 # required modules
 add_subdirectory(serial)
 
-if(BUILD_NVECTOR_MANYVECTOR OR BUILD_NVECTOR_MPIMANYVECTOR)
-  add_subdirectory(manyvector)
-endif()
-
-if(BUILD_NVECTOR_PARALLEL)
-  add_subdirectory(parallel)
-endif()
-
-if(BUILD_NVECTOR_MPIPLUSX)
-  add_subdirectory(mpiplusx)
-endif()
-
-if(BUILD_NVECTOR_PARHYP)
-  add_subdirectory(parhyp)
-endif()
-
-if(BUILD_NVECTOR_OPENMP)
-  add_subdirectory(openmp)
-endif()
-
-if(BUILD_NVECTOR_OPENMPDEV)
-  add_subdirectory(openmpdev)
-endif()
-
-if(BUILD_NVECTOR_PTHREADS)
-  add_subdirectory(pthreads)
-endif()
-
-if(BUILD_NVECTOR_PETSC)
-  add_subdirectory(petsc)
-endif()
 
 if(BUILD_NVECTOR_CUDA)
   add_subdirectory(cuda)
@@ -61,13 +30,6 @@ if(BUILD_NVECTOR_SYCL)
   add_subdirectory(sycl)
 endif()
 
-if(BUILD_NVECTOR_RAJA)
-  add_subdirectory(raja)
-endif()
-
-if(BUILD_NVECTOR_TRILINOS)
-  add_subdirectory(trilinos)
-endif()
 
 if(BUILD_NVECTOR_KOKKOS)
   install(CODE "MESSAGE(\"\nInstall NVECTOR_KOKKOS\n\")")

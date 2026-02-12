@@ -19,19 +19,16 @@ install(CODE "MESSAGE(\"\nInstall IDAS\n\")")
 
 # Add variable idas_SOURCES with the sources for the IDAS library
 set(idas_SOURCES
-    idas.c
     idaa.c
     idas_io.c
     idas_ic.c
     idaa_io.c
-    idas_ls.c
-    idas_bbdpre.c
     idas_nls.c
     idas_nls_sim.c
     idas_nls_stg.c)
 
 # Add variable idas_HEADERS with the exported IDAS header files
-set(idas_HEADERS idas.h idas_bbdpre.h idas_ls.h)
+set(idas_HEADERS)
 
 # Add prefix with complete path to the IDAS header files
 add_prefix(${SUNDIALS_SOURCE_DIR}/include/idas/ idas_HEADERS)

@@ -21,21 +21,14 @@ install(CODE "MESSAGE(\"\nInstall CVODES\n\")")
 set(cvodes_SOURCES
     cvodea.c
     cvodea_io.c
-    cvodes.c
-    cvodes_bandpre.c
-    cvodes_bbdpre.c
-    cvodes_diag.c
     cvodes_io.c
-    cvodes_ls.c
     cvodes_nls.c
     cvodes_nls_sim.c
     cvodes_nls_stg.c
-    cvodes_nls_stg1.c
-    cvodes_proj.c)
+  cvodes_nls_stg1.c)
 
 # Add variable cvodes_HEADERS with the exported CVODES header files
-set(cvodes_HEADERS cvodes.h cvodes_bandpre.h cvodes_bbdpre.h cvodes_diag.h
-                   cvodes_ls.h cvodes_proj.h)
+set(cvodes_HEADERS)
 
 # Add prefix with complete path to the CVODES header files
 add_prefix(${SUNDIALS_SOURCE_DIR}/include/cvodes/ cvodes_HEADERS)

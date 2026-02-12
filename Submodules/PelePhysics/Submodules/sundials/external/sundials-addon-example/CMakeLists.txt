@@ -16,9 +16,7 @@ project (example-sundials-addon)
 # Create mynvector library
 sundials_add_library(sundials_external_mynvector
   SOURCES
-    myNVector.c
   HEADERS
-    myNVector.h
   INCLUDE_SUBDIR
     nvector
   LINK_LIBRARIES

@@ -22,52 +22,35 @@ set(arkode_SOURCES
     arkode_arkstep_io.c
     arkode_arkstep_nls.c
     arkode_arkstep.c
-    arkode_bandpre.c
-    arkode_bbdpre.c
     arkode_butcher_dirk.c
     arkode_butcher_erk.c
     arkode_butcher.c
     arkode_erkstep_io.c
     arkode_erkstep.c
-    arkode_forcingstep.c
     arkode_interp.c
     arkode_io.c
     arkode_ls.c
     arkode_lsrkstep_io.c
-    arkode_lsrkstep.c
     arkode_mri_tables.c
     arkode_mristep_controller.c
     arkode_mristep_io.c
     arkode_mristep_nls.c
-    arkode_mristep.c
     arkode_relaxation.c
     arkode_root.c
     arkode_splittingstep_coefficients.c
-    arkode_splittingstep.c
     arkode_sprkstep_io.c
-    arkode_sprkstep.c
-    arkode_sprk.c
     arkode_sunstepper.c
-    arkode_user_controller.c
     arkode.c)
 
 # Add variable arkode_HEADERS with the exported ARKODE header files
 set(arkode_HEADERS
     arkode.h
     arkode_arkstep.h
-    arkode_bandpre.h
-    arkode_bbdpre.h
     arkode_butcher.h
     arkode_butcher_dirk.h
     arkode_butcher_erk.h
     arkode_erkstep.h
-    arkode_forcingstep.h
-    arkode_ls.h
-    arkode_lsrkstep.h
-    arkode_mristep.h
-    arkode_splittingstep.h
-    arkode_sprk.h
-    arkode_sprkstep.h)
+  arkode_ls.h)
 
 # Add prefix with complete path to the ARKODE header files
 add_prefix(${SUNDIALS_SOURCE_DIR}/include/arkode/ arkode_HEADERS)
@@ -84,18 +67,11 @@ sundials_add_library(
     sundials_nvecserial_obj
     sundials_sunadaptcontrollersoderlind_obj
     sundials_sunadaptcontrollerimexgus_obj
-    sundials_sunadaptcontrollermrihtol_obj
     sundials_sunmatrixband_obj
     sundials_sunmatrixdense_obj
     sundials_sunmatrixsparse_obj
-    sundials_sunlinsolband_obj
     sundials_sunlinsoldense_obj
-    sundials_sunlinsolspbcgs_obj
-    sundials_sunlinsolspfgmr_obj
     sundials_sunlinsolspgmr_obj
-    sundials_sunlinsolsptfqmr_obj
-    sundials_sunlinsolpcg_obj
-    sundials_sunnonlinsolnewton_obj
     sundials_sunnonlinsolfixedpoint_obj
   OUTPUT_NAME sundials_arkode
   VERSION ${arkodelib_VERSION}

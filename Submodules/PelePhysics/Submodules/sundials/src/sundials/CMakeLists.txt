@@ -22,7 +22,6 @@ install(CODE "MESSAGE(\"\nInstall shared components\n\")")
 # Add variable sundials_HEADERS with the exported SUNDIALS header files
 set(sundials_HEADERS
     sundials_adaptcontroller.h
-    sundials_band.h
     sundials_base.hpp
     sundials_context.h
     sundials_context.hpp
@@ -32,7 +31,6 @@ set(sundials_HEADERS
     sundials_dense.h
     sundials_direct.h
     sundials_errors.h
-    sundials_futils.h
     sundials_iterative.h
     sundials_linearsolver.h
     sundials_linearsolver.hpp
@@ -42,7 +40,6 @@ set(sundials_HEADERS
     sundials_matrix.hpp
     sundials_memory.h
     sundials_memory.hpp
-    sundials_mpi_types.h
     sundials_nonlinearsolver.h
     sundials_nonlinearsolver.hpp
     sundials_nvector.h
@@ -50,7 +47,6 @@ set(sundials_HEADERS
     sundials_profiler.h
     sundials_profiler.hpp
     sundials_stepper.h
-    sundials_types_deprecated.h
     sundials_types.h
     sundials_version.h)
 
@@ -70,22 +66,15 @@ if(ENABLE_SYCL)
   list(APPEND sundials_HEADERS sundials_sycl_policies.hpp)
 endif()
 
-# If enabled, add the XBraid interface header
-if(ENABLE_XBRAID)
-  list(APPEND sundials_HEADERS sundials_xbraid.h)
-endif()
-
 # Add prefix with complete path to the header files
 add_prefix(${SUNDIALS_SOURCE_DIR}/include/sundials/ sundials_HEADERS)
 
 set(sundials_SOURCES
     sundials_adaptcontroller.c
-    sundials_band.c
     sundials_context.c
     sundials_dense.c
     sundials_direct.c
     sundials_errors.c
-    sundials_futils.c
     sundials_hashmap.c
     sundials_iterative.c
     sundials_linearsolver.c
@@ -94,7 +83,6 @@ set(sundials_SOURCES
     sundials_matrix.c
     sundials_memory.c
     sundials_nonlinearsolver.c
-    sundials_nvector_senswrapper.c
     sundials_nvector.c
     sundials_stepper.c
     sundials_profiler.c
@@ -135,15 +123,7 @@ sundials_add_library(
 # Install private headers
 install(
   FILES ${SUNDIALS_SOURCE_DIR}/include/sundials/priv/sundials_context_impl.h
-        ${SUNDIALS_SOURCE_DIR}/include/sundials/priv/sundials_errors_impl.h
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/sundials/priv")
-
-if(ENABLE_MPI)
-  install(
-    FILES
-      ${SUNDIALS_SOURCE_DIR}/include/sundials/priv/sundials_mpi_errors_impl.h
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/sundials/priv")
-endif()
 
 # SUNDIALS_EXPORT macro
 include(GenerateExportHeader)

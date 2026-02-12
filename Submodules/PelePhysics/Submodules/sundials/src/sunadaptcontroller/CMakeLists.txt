@@ -17,4 +17,3 @@
 # required native adaptivity controllers
 add_subdirectory(imexgus)
 add_subdirectory(soderlind)
-add_subdirectory(mrihtol)

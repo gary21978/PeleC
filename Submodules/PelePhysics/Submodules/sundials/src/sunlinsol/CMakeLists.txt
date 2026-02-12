@@ -15,13 +15,8 @@
 # ------------------------------------------------------------------------------
 
 # required native linear solvers
-add_subdirectory(band)
 add_subdirectory(dense)
-add_subdirectory(pcg)
-add_subdirectory(spbcgs)
-add_subdirectory(spfgmr)
 add_subdirectory(spgmr)
-add_subdirectory(sptfqmr)
 
 # optional TPL linear solvers
 if(BUILD_SUNLINSOL_CUSOLVERSP)
@@ -71,26 +66,8 @@ if(BUILD_SUNLINSOL_KOKKOSDENSE)
       CACHE INTERNAL "" FORCE)
 endif()
 
-if(BUILD_SUNLINSOL_LAPACKBAND)
-  add_subdirectory(lapackband)
-endif()
-
-if(BUILD_SUNLINSOL_LAPACKDENSE)
-  add_subdirectory(lapackdense)
-endif()
 
 if(BUILD_SUNLINSOL_MAGMADENSE)
   add_subdirectory(magmadense)
 endif()
 
-if(BUILD_SUNLINSOL_ONEMKLDENSE)
-  add_subdirectory(onemkldense)
-endif()
-
-if(BUILD_SUNLINSOL_SUPERLUDIST)
-  add_subdirectory(superludist)
-endif()
-
-if(BUILD_SUNLINSOL_SUPERLUMT)
-  add_subdirectory(superlumt)
-endif()

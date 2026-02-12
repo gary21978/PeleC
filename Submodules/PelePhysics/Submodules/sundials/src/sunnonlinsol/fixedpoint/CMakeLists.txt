@@ -20,7 +20,7 @@ install(CODE "MESSAGE(\"\nInstall SUNNONLINSOL_FIXEDPOINT\n\")")
 sundials_add_library(
   sundials_sunnonlinsolfixedpoint
   SOURCES sunnonlinsol_fixedpoint.c
-  HEADERS ${SUNDIALS_SOURCE_DIR}/include/sunnonlinsol/sunnonlinsol_fixedpoint.h
+  HEADERS
   INCLUDE_SUBDIR sunnonlinsol
   LINK_LIBRARIES PUBLIC sundials_core
   OBJECT_LIBRARIES

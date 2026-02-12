@@ -67,10 +67,3 @@ if(BUILD_SUNMATRIX_MAGMADENSE)
   add_subdirectory(magmadense)
 endif()
 
-if(BUILD_SUNMATRIX_ONEMKLDENSE)
-  add_subdirectory(onemkldense)
-endif()
-
-if(BUILD_SUNMATRIX_SLUNRLOC)
-  add_subdirectory(slunrloc)
-endif()

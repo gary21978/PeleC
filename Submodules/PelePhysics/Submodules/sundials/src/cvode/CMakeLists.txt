@@ -20,16 +20,13 @@ install(CODE "MESSAGE(\"\nInstall CVODE\n\")")
 # Add variable cvode_SOURCES with the sources for the CVODE library
 set(cvode_SOURCES
     cvode.c
-    cvode_bandpre.c
-    cvode_bbdpre.c
-    cvode_diag.c
     cvode_io.c
     cvode_ls.c
     cvode_nls.c
     cvode_proj.c)
 
 # Add variable cvode_HEADERS with the exported CVODE header files
-set(cvode_HEADERS cvode.h cvode_bandpre.h cvode_bbdpre.h cvode_diag.h
+set(cvode_HEADERS cvode.h   
                   cvode_ls.h cvode_proj.h)
 
 # Add prefix with complete path to the CVODE header files
@@ -87,14 +84,8 @@ sundials_add_library(
     sundials_sunmatrixband_obj
     sundials_sunmatrixdense_obj
     sundials_sunmatrixsparse_obj
-    sundials_sunlinsolband_obj
     sundials_sunlinsoldense_obj
-    sundials_sunlinsolspbcgs_obj
-    sundials_sunlinsolspfgmr_obj
     sundials_sunlinsolspgmr_obj
-    sundials_sunlinsolsptfqmr_obj
-    sundials_sunlinsolpcg_obj
-    sundials_sunnonlinsolnewton_obj
     sundials_sunnonlinsolfixedpoint_obj
   LINK_LIBRARIES # Link to stubs so examples work.
                  PRIVATE ${_fused_link_lib}
