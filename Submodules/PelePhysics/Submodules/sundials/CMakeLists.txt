@@ -231,8 +231,10 @@ endif()
 # ===============================================================
 
 # install sundials_export header file
-install(FILES "${PROJECT_BINARY_DIR}/include/sundials/sundials_export.h"
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/sundials")
+if(EXISTS "${PROJECT_BINARY_DIR}/include/sundials/sundials_export.h")
+  install(FILES "${PROJECT_BINARY_DIR}/include/sundials/sundials_export.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/sundials")
+endif()
 
 # install configured header file
 install(FILES "${PROJECT_BINARY_DIR}/include/sundials/sundials_config.h"

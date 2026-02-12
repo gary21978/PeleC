@@ -11,7 +11,7 @@ dirs=(
 )
 
 # 需要统计的扩展名
-exts=(cpp c C H h hpp)
+exts=(cpp c C H h hpp cuh cu cc)
 
 grand_files=0
 grand_lines=0

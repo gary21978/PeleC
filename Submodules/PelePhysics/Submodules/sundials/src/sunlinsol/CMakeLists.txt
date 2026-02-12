@@ -15,9 +15,6 @@
 # ------------------------------------------------------------------------------
 
 # required native linear solvers
-add_subdirectory(dense)
-add_subdirectory(spgmr)
-
 # optional TPL linear solvers
 if(BUILD_SUNLINSOL_CUSOLVERSP)
   add_subdirectory(cusolversp)

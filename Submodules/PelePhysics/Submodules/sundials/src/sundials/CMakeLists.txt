@@ -69,24 +69,7 @@ endif()
 # Add prefix with complete path to the header files
 add_prefix(${SUNDIALS_SOURCE_DIR}/include/sundials/ sundials_HEADERS)
 
-set(sundials_SOURCES
-    sundials_adaptcontroller.c
-    sundials_context.c
-    sundials_dense.c
-    sundials_direct.c
-    sundials_errors.c
-    sundials_hashmap.c
-    sundials_iterative.c
-    sundials_linearsolver.c
-    sundials_logger.c
-    sundials_math.c
-    sundials_matrix.c
-    sundials_memory.c
-    sundials_nonlinearsolver.c
-    sundials_nvector.c
-    sundials_stepper.c
-    sundials_profiler.c
-    sundials_version.c)
+set(sundials_SOURCES)
 
 if(ENABLE_MPI)
   list(APPEND sundials_SOURCES sundials_mpi_errors.c)
@@ -109,26 +92,41 @@ if(SUNDIALS_BUILD_WITH_PROFILING)
   endif()
 endif()
 
-# Create a library out of the generic sundials modules
-sundials_add_library(
-  sundials_core
-  SOURCES ${sundials_SOURCES}
-  HEADERS ${sundials_HEADERS}
-  INCLUDE_SUBDIR sundials
-  LINK_LIBRARIES ${_link_mpi_if_needed}
-  OUTPUT_NAME sundials_core
-  VERSION ${sundialslib_VERSION}
-  SOVERSION ${sundialslib_SOVERSION})
+list(LENGTH sundials_SOURCES _sundials_sources_len)
+if(_sundials_sources_len EQUAL 0)
+  add_library(sundials_core INTERFACE)
+  target_link_libraries(sundials_core INTERFACE ${_link_mpi_if_needed})
+  target_include_directories(
+    sundials_core
+    INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+              $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+              $<BUILD_INTERFACE:${SUNDIALS_SOURCE_DIR}/src/sundials>
+              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  install(TARGETS sundials_core EXPORT sundials-targets)
+else()
+  # Create a library out of the generic sundials modules
+  sundials_add_library(
+    sundials_core
+    SOURCES ${sundials_SOURCES}
+    HEADERS ${sundials_HEADERS}
+    INCLUDE_SUBDIR sundials
+    LINK_LIBRARIES ${_link_mpi_if_needed}
+    OUTPUT_NAME sundials_core
+    VERSION ${sundialslib_VERSION}
+    SOVERSION ${sundialslib_SOVERSION})
+endif()
 
 # Install private headers
 install(
   FILES ${SUNDIALS_SOURCE_DIR}/include/sundials/priv/sundials_context_impl.h
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/sundials/priv")
 
-# SUNDIALS_EXPORT macro
-include(GenerateExportHeader)
-generate_export_header(
-  sundials_core BASE_NAME SUNDIALS EXPORT_FILE_NAME
-  "${PROJECT_BINARY_DIR}/include/sundials/sundials_export.h")
+if(NOT _sundials_sources_len EQUAL 0)
+  # SUNDIALS_EXPORT macro
+  include(GenerateExportHeader)
+  generate_export_header(
+    sundials_core BASE_NAME SUNDIALS EXPORT_FILE_NAME
+    "${PROJECT_BINARY_DIR}/include/sundials/sundials_export.h")
+endif()
 
 # F2003 Fortran interface pruned

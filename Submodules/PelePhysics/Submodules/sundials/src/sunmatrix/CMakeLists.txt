@@ -15,10 +15,6 @@
 # ------------------------------------------------------------------------------
 
 # required native matrices
-add_subdirectory(band)
-add_subdirectory(dense)
-add_subdirectory(sparse)
-
 # optional TPL matrices
 if(BUILD_SUNMATRIX_CUSPARSE)
   add_subdirectory(cusparse)

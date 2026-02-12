@@ -15,9 +15,6 @@
 # ------------------------------------------------------------------------------
 
 # required modules
-add_subdirectory(serial)
-
-
 if(BUILD_NVECTOR_CUDA)
   add_subdirectory(cuda)
 endif()

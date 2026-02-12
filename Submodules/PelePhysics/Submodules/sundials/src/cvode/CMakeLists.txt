@@ -18,12 +18,7 @@
 install(CODE "MESSAGE(\"\nInstall CVODE\n\")")
 
 # Add variable cvode_SOURCES with the sources for the CVODE library
-set(cvode_SOURCES
-    cvode.c
-    cvode_io.c
-    cvode_ls.c
-    cvode_nls.c
-    cvode_proj.c)
+set(cvode_SOURCES)
 
 # Add variable cvode_HEADERS with the exported CVODE header files
 set(cvode_HEADERS cvode.h   
@@ -60,38 +55,34 @@ if(SUNDIALS_BUILD_PACKAGE_FUSED_KERNELS)
       SOVERSION ${cvodelib_SOVERSION})
   endif()
 
-  sundials_add_library(
-    sundials_cvode_fused_stubs
-    SOURCES cvode_fused_stubs.c
-    LINK_LIBRARIES PUBLIC sundials_core
-    OUTPUT_NAME sundials_cvode_fused_stubs
-    VERSION ${cvodelib_VERSION}
-    SOVERSION ${cvodelib_SOVERSION})
-
-  set(_fused_link_lib sundials_cvode_fused_stubs)
+  set(_fused_link_lib)
 endif()
 
-# Create the library
-sundials_add_library(
-  sundials_cvode
-  SOURCES ${cvode_SOURCES}
-  HEADERS ${cvode_HEADERS}
-  INCLUDE_SUBDIR cvode
-  LINK_LIBRARIES PUBLIC sundials_core
-  OBJECT_LIBRARIES
-    sundials_sunmemsys_obj
-    sundials_nvecserial_obj
-    sundials_sunmatrixband_obj
-    sundials_sunmatrixdense_obj
-    sundials_sunmatrixsparse_obj
-    sundials_sunlinsoldense_obj
-    sundials_sunlinsolspgmr_obj
-    sundials_sunnonlinsolfixedpoint_obj
-  LINK_LIBRARIES # Link to stubs so examples work.
-                 PRIVATE ${_fused_link_lib}
-  OUTPUT_NAME sundials_cvode
-  VERSION ${cvodelib_VERSION}
-  SOVERSION ${cvodelib_SOVERSION})
+list(LENGTH cvode_SOURCES _cvode_sources_len)
+if(_cvode_sources_len EQUAL 0)
+  add_library(sundials_cvode INTERFACE)
+  target_link_libraries(sundials_cvode INTERFACE sundials_core ${_fused_link_lib})
+  target_include_directories(
+    sundials_cvode
+    INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+              $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+              $<BUILD_INTERFACE:${SUNDIALS_SOURCE_DIR}/src/sundials>
+              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  install(TARGETS sundials_cvode EXPORT sundials-targets)
+else()
+  # Create the library
+  sundials_add_library(
+    sundials_cvode
+    SOURCES ${cvode_SOURCES}
+    HEADERS ${cvode_HEADERS}
+    INCLUDE_SUBDIR cvode
+    LINK_LIBRARIES PUBLIC sundials_core
+    LINK_LIBRARIES # Link to stubs so examples work.
+                   PRIVATE ${_fused_link_lib}
+    OUTPUT_NAME sundials_cvode
+    VERSION ${cvodelib_VERSION}
+    SOVERSION ${cvodelib_SOVERSION})
+endif()
 
 # Finished CVODE
 message(STATUS "Added CVODE module")

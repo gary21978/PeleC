@@ -24,7 +24,7 @@ sundials_add_library(
   INCLUDE_SUBDIR sunlinsol
   LINK_LIBRARIES PUBLIC sundials_core
   OBJECT_LIBRARIES
-  LINK_LIBRARIES PUBLIC sundials_sunmatrixsparse SUNDIALS::KLU
+  LINK_LIBRARIES PUBLIC SUNDIALS::KLU
   OUTPUT_NAME sundials_sunlinsolklu
   VERSION ${sunlinsollib_VERSION}
   SOVERSION ${sunlinsollib_SOVERSION})
