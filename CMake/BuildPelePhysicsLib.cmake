@@ -70,12 +70,9 @@ function(build_pele_physics_lib pele_physics_lib_name)
     target_include_directories(${pele_physics_lib_name} PUBLIC ${PELE_PHYSICS_UTILITY_DIR}/Filter)
 
     target_sources(${pele_physics_lib_name} PRIVATE ${AMREX_SUNDIALS_DIR}/AMReX_Sundials.H
-                                             ${AMREX_SUNDIALS_DIR}/AMReX_Sundials_Core.cpp
-                                             ${AMREX_SUNDIALS_DIR}/AMReX_Sundials_Core.H
-                                             ${AMREX_SUNDIALS_DIR}/AMReX_NVector_MultiFab.cpp
-                                             ${AMREX_SUNDIALS_DIR}/AMReX_NVector_MultiFab.H
-                                             ${AMREX_SUNDIALS_DIR}/AMReX_SUNMemory.cpp
-                                             ${AMREX_SUNDIALS_DIR}/AMReX_SUNMemory.H)
+                         ${AMREX_SUNDIALS_DIR}/AMReX_Sundials_Core.H
+                         ${AMREX_SUNDIALS_DIR}/AMReX_NVector_MultiFab.H
+                         ${AMREX_SUNDIALS_DIR}/AMReX_SUNMemory.H)
     target_include_directories(${pele_physics_lib_name} SYSTEM PUBLIC ${AMREX_SUNDIALS_DIR})
 
     target_include_directories(${pele_physics_lib_name} PUBLIC "${PELE_PHYSICS_SRC_DIR}/Source")
