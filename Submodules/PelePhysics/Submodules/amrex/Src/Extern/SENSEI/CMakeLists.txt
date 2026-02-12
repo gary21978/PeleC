@@ -18,7 +18,7 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_AmrMeshDataAdaptor.cpp
        AMReX_AmrMeshInSituBridge.cpp
        AMReX_InSituBridge.cpp
-       AMReX_InSituUtils.cpp )
+       )
 
     if( AMReX_AMRLEVEL )
        list ( APPEND amrex_sensei_sources

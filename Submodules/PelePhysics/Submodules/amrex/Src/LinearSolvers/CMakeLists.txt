@@ -7,7 +7,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
 
     target_sources(amrex_${D}d
        PRIVATE
-       MLMG/AMReX_MLMG.cpp
        MLMG/AMReX_MLMG_${D}D_K.H
        MLMG/AMReX_MLNodeLinOp_${D}D_K.H
        MLMG/AMReX_MLNodeLinOp.cpp
@@ -15,7 +14,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        MLMG/AMReX_MLABecLap_${D}D_K.H
        MLMG/AMReX_MLALap_${D}D_K.H
        MLMG/AMReX_MLPoisson_${D}D_K.H
-       AMReX_AlgPartition.cpp
        )
 
     if (D EQUAL 3)
@@ -27,7 +25,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
     if (AMReX_LINEAR_SOLVERS_EM)
        target_sources(amrex_${D}d
           PRIVATE
-          MLMG/AMReX_MLCurlCurl.cpp
           )
 
        target_sources(amrex_${D}d
@@ -42,7 +39,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
     if (AMReX_LINEAR_SOLVERS_INCFLO)
        target_sources(amrex_${D}d
           PRIVATE
-          MLMG/AMReX_MLNodeABecLaplacian.cpp
           MLMG/AMReX_MLNodeABecLap_${D}D_K.H
           MLMG/AMReX_MLNodeLaplacian.cpp
           MLMG/AMReX_MLNodeLaplacian_sync.cpp
@@ -50,7 +46,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
           MLMG/AMReX_MLNodeLaplacian_misc.cpp
           MLMG/AMReX_MLNodeLap_${D}D_K.H
           MLMG/AMReX_MLTensorOp.cpp
-          MLMG/AMReX_MLTensorOp_grad.cpp
           MLMG/AMReX_MLTensor_${D}D_K.H
        )
     endif ()
@@ -66,9 +61,7 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        if (AMReX_LINEAR_SOLVERS_INCFLO)
           target_sources(amrex_${D}d
              PRIVATE
-             MLMG/AMReX_MLNodeLaplacian_eb.cpp
              MLMG/AMReX_MLEBTensorOp.cpp
-             MLMG/AMReX_MLEBTensorOp_bc.cpp
              MLMG/AMReX_MLEBTensor_${D}D_K.H
              )
        endif ()
@@ -83,7 +76,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
     if (AMReX_HYPRE AND AMReX_LINEAR_SOLVERS_INCFLO)
        target_sources(amrex_${D}d
           PRIVATE
-          MLMG/AMReX_MLNodeLaplacian_hypre.cpp
           )
     endif ()
 

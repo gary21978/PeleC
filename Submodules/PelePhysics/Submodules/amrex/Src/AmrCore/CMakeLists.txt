@@ -23,7 +23,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_Interpolater.H
        AMReX_TagBox.H
        AMReX_AmrMesh.H
-       AMReX_InterpFaceRegister.cpp
        
        )
 

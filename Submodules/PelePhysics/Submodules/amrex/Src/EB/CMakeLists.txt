@@ -60,7 +60,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_EB2_IF_Extrusion.H
        AMReX_EB2_IF_Difference.H
        AMReX_EB2_IF_Base.H
-       AMReX_distFcnElement.cpp
        AMReX_EB2_GeometryShop.H
        AMReX_EB2.H
        AMReX_EB2_IndexSpaceI.H
@@ -76,10 +75,10 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_EB2_${D}D_C.H
        AMReX_EB_STL_utils.cpp
        AMReX_EB_chkpt_file.cpp
-       AMReX_EB2_Level_STL.cpp
-       AMReX_EB2_IndexSpace_STL.cpp
+      AMReX_EB2_Level_STL.cpp
+      AMReX_EB2_IndexSpace_STL.cpp
        AMReX_EB2_Level_chkpt_file.cpp
-       AMReX_EB2_IndexSpace_chkpt_file.cpp
+      AMReX_EB2_IndexSpace_chkpt_file.cpp
        )
 
     if (D EQUAL 3)

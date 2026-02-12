@@ -9,7 +9,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_Math.H
        AMReX_Algorithm.H
        AMReX_Array.H
-       AMReX_BlockMutex.cpp
        AMReX_Enum.H
        AMReX_GpuComplex.H
        AMReX_Order.H
@@ -19,7 +18,7 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_TypeList.H
        AMReX.cpp
        AMReX_error_fi.cpp
-       AMReX_Version.cpp
+      AMReX_Version.cpp
        AMReX.H
        AMReX_Demangle.H
        AMReX_Exception.H
@@ -63,7 +62,7 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        AMReX_VisMF.cpp
        AMReX_AsyncOut.H
        AMReX_AsyncOut.cpp
-       AMReX_BackgroundThread.cpp
+      AMReX_BackgroundThread.cpp
        AMReX_Arena.H
        AMReX_Arena.cpp
        AMReX_BArena.H
@@ -238,16 +237,16 @@ foreach(D IN LISTS AMReX_SPACEDIM)
        Parser/AMReX_Parser_Exe.H
        Parser/AMReX_Parser_Y.cpp
        Parser/AMReX_Parser_Y.H
-       Parser/amrex_parser.lex.cpp
-       Parser/amrex_parser.tab.cpp
+      Parser/amrex_parser.lex.cpp
+      Parser/amrex_parser.tab.cpp
        Parser/AMReX_IParser.cpp
        Parser/AMReX_IParser.H
        Parser/AMReX_IParser_Exe.cpp
        Parser/AMReX_IParser_Exe.H
        Parser/AMReX_IParser_Y.cpp
        Parser/AMReX_IParser_Y.H
-       Parser/amrex_iparser.lex.cpp
-       Parser/amrex_iparser.tab.cpp
+      Parser/amrex_iparser.lex.cpp
+      Parser/amrex_iparser.tab.cpp
        # Dense linear algebra solver using LU decomposition
        # AMReX Hydro -----------------------------------------------------
        # Forward declaration -----------------------------------------------------

@@ -25,10 +25,7 @@ foreach(D IN LISTS AMReX_SPACEDIM)
 
        target_sources(amrex_${D}d
           PRIVATE
-          AMReX_HypreABecLap.cpp
-          AMReX_HypreABecLap2.cpp
           AMReX_HypreABecLap3.cpp
-          AMReX_Hypre.cpp
           AMReX_Habec_${D}D_K.H
           AMReX_HypreNodeLap.cpp
           AMReX_HypreIJIface.cpp

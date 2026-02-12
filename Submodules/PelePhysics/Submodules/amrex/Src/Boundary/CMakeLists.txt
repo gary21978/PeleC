@@ -4,7 +4,6 @@ foreach(D IN LISTS AMReX_SPACEDIM)
     target_sources(amrex_${D}d
        PRIVATE
        AMReX_Mask.cpp
-       AMReX_MultiMask.cpp
        AMReX_LO_BCTYPES.cpp
        AMReX_YAFluxRegister.H
        AMReX_YAFluxRegister_K.H
