@@ -196,13 +196,6 @@ static inline void SUNHandleErrWithFmtMsg(int line, const char* func,
 }
 
 /*
-  The SUNCTX_ macro expands to the name of the local SUNContext object
-  defined by SUNFunctionBegin. SUNCTX_ should be used to reference the
-  SUNContext inside of SUNDIALS functions.
- */
-#define SUNCTX_ sunctx_local_scope_
-
-/*
   The SUNFunctionBegin macro is used to declare the local SUNContext object to
   be used a function. It should be used at the start of every SUNDIALS
   functions.
@@ -210,8 +203,7 @@ static inline void SUNHandleErrWithFmtMsg(int line, const char* func,
   :param sunctx: the SUNContext to set the local SUNContext variable to
  */
 #define SUNFunctionBegin(sunctx) \
-  SUNContext SUNCTX_ = sunctx;   \
-  (void)SUNCTX_
+  (void)sunctx
 
 /* ----------------------------------------------------------------------------
  * SUNCheck* family of error checking macros
